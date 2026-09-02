@@ -402,7 +402,7 @@ async function cachedImageBytes(url){
 }
 function cm(v){return Math.round(v*567);}
 
-async function printSelectedCard(){
+async function generateCardWord(){
   const x=selectedSantriForPrint();if(!x)return;
   const btn=document.querySelector('button[onclick="printSelectedCard()"]');
   const oldText=btn?.textContent;
@@ -454,7 +454,7 @@ async function printSelectedCard(){
   if(btn){btn.disabled=false;btn.textContent=oldText;}
 }
 
-async function printSelectedActiveLetter(){
+async function generateActiveLetterWord(){
   const x=selectedSantriForPrint();if(!x)return;
   const btn=document.querySelector('button[onclick="printSelectedActiveLetter()"]');
   const oldText=btn?.textContent;
@@ -499,6 +499,78 @@ async function printSelectedActiveLetter(){
   saveBlob(blob,"Surat-Aktif-"+String(nama).replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")+".docx");
   if(btn){btn.disabled=false;btn.textContent=oldText;}
 }
+
+/* ==================== REVIEW DOKUMEN DI TAB CHROME ==================== */
+function ttlPrint(x){
+  const t=val(x,"Tempat Lahir","Tempat","Kabupaten")||"";
+  const d=val(x,"Tanggal Lahir");
+  if(t&&d)return t+", "+new Date(d+"T00:00:00").toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+  return t||d||"";
+}
+function jkLong(x){const j=String(val(x,"JK")).toUpperCase();return j==="L"?"Laki-laki":j==="P"?"Perempuan":val(x,"JK");}
+function alamatPrint(x){
+  return [val(x,"Dusun"),val(x,"Desa"),val(x,"Kecamatan"),val(x,"Kabupaten"),val(x,"Provinsi"),val(x,"Alamat")].filter(Boolean).join(", ");
+}
+function formatLongDate(d){
+  return new Date(d).toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+}
+function popupDocReview(title,html,onDownload){
+  const w=window.open("","_blank");
+  if(!w){alert("Tab review diblokir Chrome. Izinkan popup untuk situs ini lalu tekan tombol lagi.");return null}
+  w.document.open();
+  w.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#e9ecef;font-family:Arial,Segoe UI,sans-serif;color:#111}
+    .toolbar{position:sticky;top:0;z-index:5;background:#103d31;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px #0003}
+    .toolbar b{font-size:15px}.toolbar .actions{display:flex;gap:8px}.toolbar button{border:0;border-radius:7px;padding:9px 14px;font-weight:700;cursor:pointer}.download{background:#c99a35;color:#17250f}.close{background:#edf2ef;color:#17352c}
+    .paper{margin:24px auto;background:#fff;box-shadow:0 4px 18px #0002}
+    .card-paper{width:85.6mm;min-height:54mm;padding:0;border:1px solid #0d6b50}
+    .letter-paper{width:210mm;min-height:297mm;padding:15mm 10mm}
+    @media(max-width:700px){.letter-paper{width:calc(100vw - 20px);padding:15px}.card-paper{transform-origin:top center;max-width:90vw}}
+    .card-head{background:#00b44b;color:#fff;text-align:center;padding:5px 4px 6px}.card-head img{width:42px;height:38px;object-fit:contain;display:block;margin:auto}.card-head div{font-weight:700;line-height:1.15}.card-title{text-align:center;font-size:15px;font-weight:700;text-decoration:underline;margin:8px 0}.card-body{display:grid;grid-template-columns:1fr 21.6mm;padding:4px 6px 7px;gap:4px;font-size:7px}.card-info div{margin:3px 0}.card-info b{font-weight:700}.photo{width:20mm;height:15mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:7px;overflow:hidden}.photo img{width:100%;height:100%;object-fit:cover}.card-foot{background:#00b44b;color:#fff;padding:4px 6px;font-size:6.5px;font-weight:700}.card-foot div:last-child{text-align:center;margin-top:2px}
+    .letter-head{text-align:center;font-family:"Times New Roman",serif}.letter-head img{width:82px;height:74px;object-fit:contain;display:block;margin:auto}.letter-head div{font-weight:700;line-height:1.15}.doubleline{border-bottom:3px double #111;margin:7px 0 14px}.letter-title{text-align:center;font:bold 16px "Times New Roman";text-decoration:underline;margin-bottom:6px}.letter-number{text-align:center;font:13px "Times New Roman";margin-bottom:16px}.letter-body{font:13px/1.5 "Times New Roman";text-align:justify}.letter-table{width:100%;border-collapse:collapse;margin:10px 0}.letter-table th,.letter-table td{border:1px solid #111;padding:6px;text-align:center;font:12px "Times New Roman"}.letter-table th{font-weight:700}.sign{display:grid;grid-template-columns:1fr 1fr;margin-top:30px;font:13px "Times New Roman";text-align:center}.sign .name{font-weight:700;text-decoration:underline;margin-top:55px}
+  </style></head><body><div class="toolbar"><b>${esc(title)}</b><div class="actions"><button class="download" id="downloadBtn">⬇ Unduh Word (.docx)</button><button class="close" id="closeBtn">Tutup Tab</button></div></div>${html}</body></html>`);
+  w.document.close();
+  w.document.getElementById("downloadBtn").addEventListener("click",async()=>{
+    const b=w.document.getElementById("downloadBtn"),old=b.textContent;
+    b.disabled=true;b.textContent="Menyiapkan Word...";
+    try{await onDownload()}catch(e){console.error(e);w.alert("Gagal membuat Word: "+(e?.message||e));}
+    finally{b.disabled=false;b.textContent=old}
+  });
+  w.document.getElementById("closeBtn").addEventListener("click",()=>w.close());
+  w.focus();
+  return w;
+}
+function printSelectedCard(){
+  const x=selectedSantriForPrint();if(!x)return;
+  const nama=val(x,"Nama Santri","Nama"),foto=val(x,"Foto");
+  const expiry=new Date();expiry.setFullYear(expiry.getFullYear()+2);
+  const photo=foto?`<img src="${esc(foto)}" alt="Foto Santri">`:`FOTO<br>2 × 1,5 cm`;
+  const html=`<div class="paper card-paper">
+    <div class="card-head">${PRINT_CARD_LOGO?`<img src="${PRINT_CARD_LOGO}" alt="Logo">`:""}<div style="font-size:8px">YAYASAN DAYAH PESANTREN</div><div style="font-size:11px">AR-RAUDHATUN NABAWIYAH</div><div style="font-size:8px">MESJID BARO</div><div style="font-size:7px">KEC.SAMATIGA KAB. ACEH BARAT</div></div>
+    <div class="card-title">KARTU SANTRI</div>
+    <div class="card-body"><div class="card-info">
+      <div><b>NIS</b> : ${esc(val(x,"NIS"))}</div><div><b>Nama</b> : ${esc(nama)}</div><div><b>TTL</b> : ${esc(ttlPrint(x))}</div><div><b>Jenis Kelamin</b> : ${esc(jkLong(x))}</div><div><b>Nama Ayah</b> : ${esc(val(x,"Nama Ayah"))}</div><div><b>Nama Ibu</b> : ${esc(val(x,"Nama Ibu"))}</div><div><b>Alamat Domisili</b> : ${esc(alamatPrint(x))}</div>
+    </div><div class="photo">${photo}</div></div>
+    <div class="card-foot"><div>Berlaku Hingga : ${esc(formatLongDate(expiry))}</div><div>YAYASAN DAYAH PESANTREN AR-RAUDHATUN NABAWIYAH</div></div>
+  </div>`;
+  return popupDocReview("Review Kartu Santri — "+nama,html,()=>generateCardWord());
+}
+function printSelectedActiveLetter(){
+  const x=selectedSantriForPrint();if(!x)return;
+  const nama=val(x,"Nama Santri","Nama"),today=new Date();
+  const html=`<div class="paper letter-paper">
+    <div class="letter-head">${PRINT_LETTER_LOGO?`<img src="${PRINT_LETTER_LOGO}" alt="Logo">`:""}<div style="font-size:18px">YAYASAN DAYAH PESANTREN</div><div style="font-size:22px">AR-RAUDHATUN NABAWIYAH</div><div style="font-size:18px">MESJID BARO</div><div style="font-size:16px">KECAMATAN SAMATIGA KABUPATEN ACEH BARAT</div><div style="font-size:12px;font-weight:400">Sekretariat : Komplek Yayasan Pesantren Jl.Reusak-Mesjid Baro Km 0,5</div></div>
+    <div class="doubleline"></div><div class="letter-title">SURAT KETERANGAN AKTIF</div><div class="letter-number">Nomor : .........../........./........./..........</div>
+    <div class="letter-body"><p>Pimpinan Dayah Ar-Raudhatun Nabawiyah Gampong Mesjid Baro Kecamatan Samatiga Kabupaten Aceh Barat menerangkan bahwa :</p>
+    <table class="letter-table"><thead><tr><th>NIS</th><th>Nama</th><th>Tempat Tanggal Lahir</th><th>Jenis Kelamin</th><th>Alamat</th></tr></thead><tbody><tr><td>${esc(val(x,"NIS"))}</td><td>${esc(nama)}</td><td>${esc(ttlPrint(x))}</td><td>${esc(jkLong(x))}</td><td>${esc(alamatPrint(x))}</td></tr></tbody></table>
+    <p>Benar yang nama tersebut diatas adalah santri Dayah Ar-Raudhatun Nabawiyah Gampong Mesjid Baro Kecamatan Samatiga Kabupaten Aceh Barat,dan benar bahwa santri tersebut masih aktif sampai dengan sekarang</p>
+    <p>Demikian surat keterangan ini di buat untuk dipergunakan dengan semestinya,atas kerja sama yang baik kami ucapkan terima kasih.</p>
+    <div class="sign"><div>Mengetahui<br><br>Pimpinan Dayah Ar-Raudhatun Nabawiyah<div class="name">Abu.H.Mustafa Habli,L.c</div></div><div>Mesjid Baro, ${esc(formatLongDate(today))}<br><br>An.Ketua Bidang Kesantrian<div class="name">Tgk.Rizal Fahmi</div></div></div></div>
+  </div>`;
+  return popupDocReview("Review Surat Aktif — "+nama,html,()=>generateActiveLetterWord());
+}
+
 function formDataObj(form){let o=Object.fromEntries(new FormData(form).entries());delete o.__key;delete o.FotoFile;["Provinsi","Kabupaten","Kecamatan","Desa"].forEach(k=>{let el=form.elements.namedItem(k);if(el&&el.tagName==="SELECT"&&el.selectedIndex>=0)o[k]=el.options[el.selectedIndex].textContent.trim()});return o}
 function showSantriPhoto(url=""){const box=$("santriPhotoPreview");if(!box)return;box.innerHTML=url?`<img src="${esc(url)}" alt="Foto Santri">`:"Belum ada foto"}
 function previewSantriPhoto(input){const file=input.files&&input.files[0];if(!file){showSantriPhoto($("santriFoto").value||"");return}if(!file.type.startsWith("image/")){alert("File harus berupa gambar.");input.value="";return}if(file.size>2*1024*1024){alert("Ukuran foto maksimal 2 MB.");input.value="";return}const url=URL.createObjectURL(file);showSantriPhoto(url);setTimeout(()=>URL.revokeObjectURL(url),1000)}
