@@ -97,11 +97,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 <section id="kehadiran" class="page">
  <div class="panel">
   <div class="toolbar"><div class="left"><h3 style="margin:0">Kehadiran Santri</h3></div><div class="right"><button class="btn" onclick="loadAttendanceStudents()">↻ Muat Santri</button><button class="btn gold" onclick="saveAttendance()">Simpan Kehadiran</button></div></div>
-  <div class="notice">Guru mengisi kehadiran sesuai tanggal, kelas, mata pelajaran, dan jam pelajaran. Gunakan salah satu dari 3 akun guru yang telah disediakan.</div>
+  <div class="notice">Guru mengisi kehadiran sesuai tanggal, kelas, dan jam pelajaran. Gunakan salah satu dari 3 akun guru yang telah disediakan.</div>
   <div class="grid">
    <div class="field"><label>Tanggal</label><input type="date" id="attDate" required></div>
    <div class="field"><label>Kelas</label><select id="attClass" required onchange="loadAttendanceStudents()"><option value="">Pilih kelas</option></select></div>
-   <div class="field"><label>Mata Pelajaran</label><select id="attMapel" required><option value="">Pilih mata pelajaran</option></select></div>
    <div class="field"><label>Jam Pelajaran</label><input id="attJam" placeholder="Contoh: 08.00–09.00"></div>
   </div>
   <div class="toolbar" style="margin-top:16px"><div class="left"><input id="attSearch" placeholder="Cari nama/NIS..." oninput="renderAttendanceRows()" style="padding:10px;border:1px solid #d8d1c2;border-radius:10px;width:260px"></div><div class="right"><button class="btn secondary" onclick="setAllAttendance('Hadir')">Semua Hadir</button></div></div>
@@ -320,21 +319,20 @@ function uniqValues(arr,key){return [...new Set(arr.map(x=>String(x[key]||'').tr
 function initAttendanceUI(){
  const d=$("attDate"); if(d&&!d.value)d.value=todayISO();
  const cls=$("attClass"); if(cls){let old=cls.value;let values=uniqValues(santri,'Kelas');cls.innerHTML='<option value="">Pilih kelas</option>'+values.map(x=>`<option>${esc(x)}</option>`).join('');cls.value=old&&values.includes(old)?old:'';}
- const mp=$("attMapel"); if(mp){let old=mp.value;let list=uniqValues(guru,'Mapel');mp.innerHTML='<option value="">Pilih mata pelajaran</option>'+list.map(x=>`<option>${esc(x)}</option>`).join('');mp.value=old&&list.includes(old)?old:'';}
- const ps=$("parentSantri"); if(ps){let old=ps.value;let list=isParent()?santri.filter(x=>String(val(x,'NIK'))===String(profile?.nis)):santri;ps.innerHTML='<option value="">Pilih santri</option>'+list.map(x=>`<option value="${esc(val(x,'NIS'))}">${esc(val(x,'Nama Santri','Nama'))} — ${esc(val(x,'NIS'))}</option>`).join('');ps.value=list[0]?String(val(list[0],'NIS')):'';}
+  const ps=$("parentSantri"); if(ps){let old=ps.value;let list=isParent()?santri.filter(x=>String(val(x,'NIK'))===String(profile?.nis)):santri;ps.innerHTML='<option value="">Pilih santri</option>'+list.map(x=>`<option value="${esc(val(x,'NIS'))}">${esc(val(x,'Nama Santri','Nama'))} — ${esc(val(x,'NIS'))}</option>`).join('');ps.value=list[0]?String(val(list[0],'NIS')):'';}
  const pm=$("parentMonth"); if(pm&&!pm.value)pm.value=todayISO().slice(0,7);
  if(isParent()&&profile?.nis&&$("parentNotice"))$("parentNotice").textContent='Data kehadiran hanya menampilkan santri yang terhubung dengan NIK pada login wali murid ini.';
 }
 function loadAttendanceStudents(){const cls=$("attClass")?.value||'';attendanceStudents=santri.filter(x=>!cls||String(val(x,'Kelas'))===cls);renderAttendanceRows()}
 function renderAttendanceRows(){
- const q=($("attSearch")?.value||'').toLowerCase();const rows=attendanceStudents.filter(x=>(val(x,'Nama Santri','Nama')+' '+val(x,'NIS')).toLowerCase().includes(q));const date=$("attDate")?.value||todayISO(),mapel=$("attMapel")?.value||'';
- $("attendanceRows").innerHTML=rows.map((x,i)=>{let key=String(val(x,'NIS'));let found=attendance.find(a=>String(a.nis)===key&&a.tanggal===date&&a.mapel===mapel&&String(a.kelas)===String(val(x,'Kelas')));return `<tr><td>${i+1}</td><td>${esc(key)}</td><td>${esc(val(x,'Nama Santri','Nama'))}</td><td>${esc(val(x,'Kelas'))}</td><td><select class="att-status" data-nis="${esc(key)}"><option ${!found||found.status==='Hadir'?'selected':''}>Hadir</option><option ${found?.status==='Sakit'?'selected':''}>Sakit</option><option ${found?.status==='Izin'?'selected':''}>Izin</option><option ${found?.status==='Alpa'?'selected':''}>Alpa</option></select></td><td><input class="att-ket" data-nis="${esc(key)}" value="${esc(found?.keterangan||'')}" placeholder="Keterangan"></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Belum ada santri pada kelas ini.</td></tr>';
+ const q=($("attSearch")?.value||'').toLowerCase();const rows=attendanceStudents.filter(x=>(val(x,'Nama Santri','Nama')+' '+val(x,'NIS')).toLowerCase().includes(q));const date=$("attDate")?.value||todayISO();
+ $("attendanceRows").innerHTML=rows.map((x,i)=>{let key=String(val(x,'NIS'));let found=attendance.find(a=>String(a.nis)===key&&a.tanggal===date&&String(a.kelas)===String(val(x,'Kelas')));return `<tr><td>${i+1}</td><td>${esc(key)}</td><td>${esc(val(x,'Nama Santri','Nama'))}</td><td>${esc(val(x,'Kelas'))}</td><td><select class="att-status" data-nis="${esc(key)}"><option ${!found||found.status==='Hadir'?'selected':''}>Hadir</option><option ${found?.status==='Sakit'?'selected':''}>Sakit</option><option ${found?.status==='Izin'?'selected':''}>Izin</option><option ${found?.status==='Alpa'?'selected':''}>Alpa</option></select></td><td><input class="att-ket" data-nis="${esc(key)}" value="${esc(found?.keterangan||'')}" placeholder="Keterangan"></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Belum ada santri pada kelas ini.</td></tr>';
 }
 function setAllAttendance(status){document.querySelectorAll('.att-status').forEach(x=>x.value=status)}
 async function saveAttendance(){
  if(!(isAdmin()||role()==='guru'))return alert('Akses hanya untuk Admin/Guru.');
- const tanggal=$("attDate").value,kelas=$("attClass").value,mapel=$("attMapel").value,jam=$("attJam").value||'';
- if(!tanggal||!kelas||!mapel)return alert('Tanggal, kelas, dan mata pelajaran wajib diisi.');
+ const tanggal=$("attDate").value,kelas=$("attClass").value,mapel="",jam=$("attJam").value||"";
+ if(!tanggal||!kelas)return alert('Tanggal dan kelas wajib diisi.');
 
  const rows=[];document.querySelectorAll('.att-status').forEach(el=>{const nis=el.dataset.nis;const san=attendanceStudents.find(x=>String(val(x,'NIS'))===nis);const ket=document.querySelector(`.att-ket[data-nis="${CSS.escape(nis)}"]`)?.value||'';if(san)rows.push({nis,nama_santri:val(san,'Nama Santri','Nama'),kelas,tanggal,mapel,guru_id:session?.user?.id||null,guru_nama:val(profile,'nama','Nama Guru')||session?.user?.email||'-',status:el.value,keterangan:ket,jam});});
  if(!rows.length)return alert('Belum ada data kehadiran.');const {error}=await sb.from('attendance').upsert(rows,{onConflict:'nis,tanggal,mapel'});if(error)return alert('Gagal menyimpan kehadiran: '+error.message);await loadAll();alert('Kehadiran berhasil disimpan.');
@@ -342,7 +340,7 @@ async function saveAttendance(){
 function renderParentAttendance(){
  const nis=$("parentSantri")?.value||'',month=$("parentMonth")?.value||'';if(!nis){if($("parentAttendanceRows"))$("parentAttendanceRows").innerHTML='<tr><td colspan="6" class="empty">Pilih santri.</td></tr>';return;}
  let rows=attendance.filter(a=>String(a.nis)===String(nis)&&(!isParent()||String(val(parentChild,'NIS'))===String(nis))&&(!month||String(a.tanggal).startsWith(month)));const count={Hadir:0,Sakit:0,Izin:0,Alpa:0};rows.forEach(a=>{if(count[a.status]!==undefined)count[a.status]++});['Hadir','Sakit','Izin','Alpa'].forEach(k=>{const el=$("att"+k);if(el)el.textContent=count[k]});
- $("parentAttendanceRows").innerHTML=rows.map(a=>`<tr><td>${esc(a.tanggal)}</td><td>${esc(a.mapel)}</td><td>${esc(a.guru_nama)}</td><td>${esc(a.kelas)}</td><td><span class="badge att-${esc(a.status)}">${esc(a.status)}</span></td><td>${esc(a.keterangan||'-')}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Belum ada riwayat kehadiran.</td></tr>';
+ $("parentAttendanceRows").innerHTML=rows.map(a=>`<tr><td>${esc(a.tanggal)}</td><td>${esc(a.guru_nama)}</td><td>${esc(a.kelas)}</td><td><span class="badge att-${esc(a.status)}">${esc(a.status)}</span></td><td>${esc(a.keterangan||'-')}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Belum ada riwayat kehadiran.</td></tr>';
 }
 function renderOrtu(){
  let q=($("ortuSearch").value||"").toLowerCase();let rows=santri.filter(x=>Object.values(x).join(" ").toLowerCase().includes(q));
