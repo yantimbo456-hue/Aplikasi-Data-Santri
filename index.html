@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sistem Informasi Santri — Dayah Ar-Raudhatun Nabawiyah</title>
+<title>Sistem Informasi Santri — Guru & Wali Murid</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#123c32">
 <meta name="mobile-web-app-capable" content="yes">
@@ -34,12 +34,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
     <h1>Dayah Ar-Raudhatun Nabawiyah</h1>
     <p>Sistem Informasi Santri — Online</p>
     <form id="loginForm">
-      <div class="field"><label>Email</label><input id="loginEmail" type="email" required placeholder="admin@email.com"></div>
-      <div class="field" style="margin-top:12px"><label>Password</label><input id="loginPassword" type="password" required placeholder="Password"></div>
+      <div class="field"><label>Email</label><input id="loginEmail" type="email" required placeholder="Email akun"></div>
+      <div class="field" style="margin-top:12px"><label>Password</label><input id="loginPassword" type="password" required placeholder="Password / NIK Santri"></div>
+      <div class="notice" style="margin-top:12px;text-align:left;font-size:12px"><b>Login Wali Murid</b>: walimurid@gmail.com / NIK santri</div>
       <div id="loginError" class="notice error hidden" style="margin-top:12px"></div>
       <button class="btn" style="width:100%;margin-top:12px">Masuk</button>
     </form>
-    <p style="font-size:11px;margin-top:18px">Akun dibuat melalui Supabase Authentication.</p>
+    <p style="font-size:11px;margin-top:18px">Wali murid: email <b>walimurid@gmail.com</b> dan password berupa <b>NIK santri</b>.</p>
   </div>
 </div>
 
@@ -96,7 +97,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 <section id="kehadiran" class="page">
  <div class="panel">
   <div class="toolbar"><div class="left"><h3 style="margin:0">Kehadiran Santri</h3></div><div class="right"><button class="btn" onclick="loadAttendanceStudents()">↻ Muat Santri</button><button class="btn gold" onclick="saveAttendance()">Simpan Kehadiran</button></div></div>
-  <div class="notice">Guru mata pelajaran mengisi kehadiran sesuai tanggal, kelas, dan mata pelajaran. Guru hanya dapat mengisi mata pelajaran yang terdaftar pada profilnya.</div>
+  <div class="notice">Guru mengisi kehadiran sesuai tanggal, kelas, mata pelajaran, dan jam pelajaran. Gunakan salah satu dari 3 akun guru yang telah disediakan.</div>
   <div class="grid">
    <div class="field"><label>Tanggal</label><input type="date" id="attDate" required></div>
    <div class="field"><label>Kelas</label><select id="attClass" required onchange="loadAttendanceStudents()"><option value="">Pilih kelas</option></select></div>
@@ -198,18 +199,24 @@ window.SUPABASE_URL = "https://utugdmlrojoodoyfoecv.supabase.co";
 window.SUPABASE_ANON_KEY = "sb_publishable_cH326b7PaVSJTzKXoMFbwA_1TknFjxh";
 
 let sb=null, session=null, profile=null, santri=[], guru=[], attendance=[]; let attendanceStudents=[];
+let parentMode=false, parentChild=null;
+
+const TEACHER_ACCOUNTS={
+  'gurusiang@gmail.com':{label:'GURU SIANG'},
+  'gurupagi@gmail.com':{label:'GURU PAGI'},
+  'gurumalam@gmail.com':{label:'GURU MALAM'}
+};
+const PARENT_EMAIL='walimurid@gmail.com';
 
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const val=(o,...keys)=>{for(const k of keys)if(o?.[k]!==undefined&&o?.[k]!==null&&String(o[k]).trim()!=="")return o[k];return""};
 const role=()=>profile?.role||"operator";
 const isAdmin=()=>role()==="admin";
+const isTeacher=()=>role()==="guru";
+const isParent=()=>role()==="orangtua";
 
-function configReady(){
- const url=String(window.SUPABASE_URL||"").trim();
- const key=String(window.SUPABASE_ANON_KEY||"").trim();
- return /^https:\/\/[^\s]+$/.test(url) && key.length>20 && !/^PASTE_/i.test(key);
-}
+function configReady(){const url=String(window.SUPABASE_URL||"").trim();const key=String(window.SUPABASE_ANON_KEY||"").trim();return /^https:\/\/[^\s]+$/.test(url)&&key.length>20&&!/^PASTE_/i.test(key)}
 function showError(msg){$("loginError").textContent=msg;$("loginError").classList.remove("hidden")}
 function hideError(){$("loginError").classList.add("hidden")}
 function openModal(id){$(id).classList.add("show")}
@@ -219,83 +226,60 @@ async function init(){
  hideError();
  if(!configReady()){showError("Konfigurasi Supabase belum benar. Periksa SUPABASE_URL dan Publishable/Anon Key.");return}
  try{
-   if(typeof supabase==="undefined"||typeof supabase.createClient!=="function")throw new Error("Library Supabase gagal dimuat. Periksa koneksi internet/CDN.");
-   sb=supabase.createClient(window.SUPABASE_URL.trim(),window.SUPABASE_ANON_KEY.trim());
-   loadDocxLibrary().catch(err=>console.warn("Preload Word:",err));
-   const {data,error}=await sb.auth.getSession();
-   if(error)throw error;
-   if(data?.session) await enter(data.session);
-   else $("loginScreen").classList.remove("hidden");
-   sb.auth.onAuthStateChange((event,newSession)=>{
-     if(event==="SIGNED_OUT"){session=null;location.reload();return}
-     if(newSession && (!session || session.access_token!==newSession.access_token)) setTimeout(()=>enter(newSession),0);
-   });
- }catch(err){
-   console.error("Supabase init error:",err);
-   showError("Gagal terhubung ke Supabase: "+(err?.message||err));
- }
+  if(typeof supabase==="undefined"||typeof supabase.createClient!=="function")throw new Error("Library Supabase gagal dimuat. Periksa koneksi internet/CDN.");
+  sb=supabase.createClient(window.SUPABASE_URL.trim(),window.SUPABASE_ANON_KEY.trim());
+  loadDocxLibrary().catch(err=>console.warn("Preload Word:",err));
+  const {data,error}=await sb.auth.getSession();
+  if(error)throw error;
+  if(data?.session) await enter(data.session); else $("loginScreen").classList.remove("hidden");
+  sb.auth.onAuthStateChange((event,newSession)=>{if(event==="SIGNED_OUT"){session=null;location.reload();return}if(newSession&&(!session||session.access_token!==newSession.access_token))setTimeout(()=>enter(newSession),0)});
+ }catch(err){console.error("Supabase init error:",err);showError("Gagal terhubung ke Supabase: "+(err?.message||err))}
 }
+
 async function enter(s){
- session=s;
- $("loginScreen").classList.add("hidden");
- $("app").classList.remove("hidden");
- $("userEmail").textContent=s?.user?.email||"-";
- $("syncStatus").textContent="Login berhasil • memuat profil...";
+ session=s; parentMode=false; parentChild=null;
+ $("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("userEmail").textContent=s?.user?.email||"-";
+ const email=String(s?.user?.email||"").toLowerCase();
+ if(TEACHER_ACCOUNTS[email]){profile={role:'guru',nama:TEACHER_ACCOUNTS[email].label,email};$("roleLabel").textContent=TEACHER_ACCOUNTS[email].label;$("syncStatus").textContent='Login guru berhasil • '+TEACHER_ACCOUNTS[email].label;applyPermissions();await loadAll();updateConfig();return}
  try{
-   const {data:p,error}=await sb.from("profiles").select("*").eq("id",s.user.id).maybeSingle();
-   if(error){
-     console.warn("profiles query failed:",error);
-     profile={role:"operator"};
-     $("syncStatus").textContent="Login berhasil • profil default OPERATOR";
-   }else{
-     profile=p||{role:"operator"};
-   }
-   $("roleLabel").textContent=profile.role==="admin"?"ADMIN":"OPERATOR";
-   applyPermissions();
-   await loadAll();
-   updateConfig();
- }catch(err){
-   console.error("App startup error:",err);
-   profile=profile||{role:"operator"};
-   $("roleLabel").textContent=profile.role==="admin"?"ADMIN":"OPERATOR";
-   applyPermissions();
-   $("syncStatus").textContent="Login berhasil • database belum siap: "+(err?.message||err);
-   updateConfig();
- }
+  const {data:p,error}=await sb.from("profiles").select("*").eq("id",s.user.id).maybeSingle();
+  profile=error?( {role:"operator"} ):(p||{role:"operator"});
+  $("roleLabel").textContent=profile.role==="admin"?"ADMIN":"OPERATOR";applyPermissions();await loadAll();updateConfig();
+ }catch(err){console.error("App startup error:",err);profile=profile||{role:"operator"};$("roleLabel").textContent=profile.role==="admin"?"ADMIN":"OPERATOR";applyPermissions();$("syncStatus").textContent="Login berhasil • database belum siap: "+(err?.message||err);updateConfig()}
 }
+
+async function loginWaliByNik(nik){
+ nik=String(nik||"").replace(/\D/g,"");
+ if(!/^\d{16}$/.test(nik))throw new Error("Password wali murid harus berupa NIK santri 16 digit.");
+ // Secure mode: the database function returns ONLY the child and its attendance.
+ const {data,error}=await sb.rpc('wali_murid_login',{p_nik:nik});
+ if(error)throw new Error(error.message+". Jalankan SQL wali murid yang disertakan bersama file ini.");
+ const result=Array.isArray(data)?data[0]:data;
+ if(!result||!result.santri)throw new Error('NIK santri tidak ditemukan.');
+ parentMode=true;parentChild=result.santri;profile={role:'orangtua',nis:nik,nama:result.santri['Nama Santri']||result.santri.Nama||'Wali Murid',email:PARENT_EMAIL};
+ session=null;santri=[result.santri];guru=[];attendance=Array.isArray(result.attendance)?result.attendance:[];
+ $("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("userEmail").textContent=PARENT_EMAIL;$("roleLabel").textContent="WALI MURID";$("syncStatus").textContent='Pantauan aktif • '+(profile.nama||'Santri');
+ applyPermissions();renderAll();updateConfig();
+}
+
 function showFatal(m){$("syncStatus").textContent="Database error: "+m}
 function applyPermissions(){
- const backupBtn=document.querySelector('[data-page="backup"]');
- if(backupBtn)backupBtn.classList.toggle("hidden",!isAdmin());
- const attBtn=document.querySelector('[data-page="kehadiran"]');
- const parentBtn=document.querySelector('[data-page="pantau"]');
- const isTeacher=role()==="guru"; const isParent=role()==="orangtua";
- if(attBtn)attBtn.classList.toggle("hidden",!(isAdmin()||isTeacher));
- if(parentBtn)parentBtn.classList.toggle("hidden",!(isAdmin()||isParent||isTeacher));
- if(isParent){document.querySelectorAll('.nav button').forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';},0)}
+ const backupBtn=document.querySelector('[data-page="backup"]');if(backupBtn)backupBtn.classList.toggle("hidden",!isAdmin());
+ const attBtn=document.querySelector('[data-page="kehadiran"]');const parentBtn=document.querySelector('[data-page="pantau"]');
+ if(attBtn)attBtn.classList.toggle("hidden",!(isAdmin()||isTeacher()));
+ if(parentBtn)parentBtn.classList.toggle("hidden",!(isAdmin()||isParent()||isTeacher()));
+ if(isTeacher()){document.querySelectorAll('.nav button').forEach(b=>{if(!['kehadiran','pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("kehadiran").classList.add('active');$("pageTitle").textContent='Kehadiran Santri';},0)}
+ if(isParent()){document.querySelectorAll('.nav button').forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';},0)}
 }
-async function logout(){
- try{if(sb)await sb.auth.signOut()}finally{location.reload()}
-}
+async function logout(){try{if(parentMode){location.reload();return}if(sb)await sb.auth.signOut()}finally{location.reload()}}
 $("loginForm").addEventListener("submit",async e=>{
- e.preventDefault();
- hideError();
- const email=$("loginEmail").value.trim();
- const password=$("loginPassword").value;
- if(!configReady())return showError("Konfigurasi Supabase belum benar.");
- if(!email||!password)return showError("Email dan password wajib diisi.");
- const button=e.target.querySelector('button[type="submit"]');
- if(button){button.disabled=true;button.textContent="Menghubungkan..."}
+ e.preventDefault();hideError();const email=$("loginEmail").value.trim().toLowerCase();const password=$("loginPassword").value;
+ if(!configReady())return showError("Konfigurasi Supabase belum benar.");if(!email||!password)return showError("Email dan password wajib diisi.");
+ const button=e.target.querySelector('button[type="submit"]');if(button){button.disabled=true;button.textContent="Menghubungkan..."}
  try{
-   const {data,error}=await sb.auth.signInWithPassword({email,password});
-   if(error)throw error;
-   if(data?.session) await enter(data.session);
- }catch(err){
-   console.error("Supabase login error:",err);
-   showError("Login gagal: "+(err?.message||err));
- }finally{
-   if(button){button.disabled=false;button.textContent="Masuk"}
- }
+  if(email===PARENT_EMAIL){await loginWaliByNik(password);return}
+  const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;if(data?.session)await enter(data.session);
+ }catch(err){console.error("Login error:",err);showError("Login gagal: "+(err?.message||err))}finally{if(button){button.disabled=false;button.textContent="Masuk"}}
 });
 
 document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("hidden"))return;document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent.trim();if(b.dataset.page==="laporan")renderReport();if(b.dataset.page==="cetak")renderPrintSearch();if(b.dataset.page==="kehadiran")initAttendanceUI();if(b.dataset.page==="pantau")renderParentAttendance()}));
@@ -336,10 +320,10 @@ function uniqValues(arr,key){return [...new Set(arr.map(x=>String(x[key]||'').tr
 function initAttendanceUI(){
  const d=$("attDate"); if(d&&!d.value)d.value=todayISO();
  const cls=$("attClass"); if(cls){let old=cls.value;let values=uniqValues(santri,'Kelas');cls.innerHTML='<option value="">Pilih kelas</option>'+values.map(x=>`<option>${esc(x)}</option>`).join('');cls.value=old&&values.includes(old)?old:'';}
- const mp=$("attMapel"); if(mp){let old=mp.value;let list=role()==='guru'?[val(profile,'mapel','Mapel','Mata Pelajaran')].filter(Boolean):uniqValues(guru,'Mapel');mp.innerHTML='<option value="">Pilih mata pelajaran</option>'+list.map(x=>`<option>${esc(x)}</option>`).join('');mp.value=role()==='guru'?list[0]||'':old;}
- const ps=$("parentSantri"); if(ps){let old=ps.value;let list=(role()==='orangtua'&&profile?.nis)?santri.filter(x=>String(val(x,'NIS'))===String(profile.nis)):santri;ps.innerHTML='<option value="">Pilih santri</option>'+list.map(x=>`<option value="${esc(val(x,'NIS'))}">${esc(val(x,'Nama Santri','Nama'))} — ${esc(val(x,'NIS'))}</option>`).join('');ps.value=old&&list.some(x=>String(val(x,'NIS'))===old)?old:(role()==='orangtua'&&profile?.nis?String(profile.nis):'');}
+ const mp=$("attMapel"); if(mp){let old=mp.value;let list=uniqValues(guru,'Mapel');mp.innerHTML='<option value="">Pilih mata pelajaran</option>'+list.map(x=>`<option>${esc(x)}</option>`).join('');mp.value=old&&list.includes(old)?old:'';}
+ const ps=$("parentSantri"); if(ps){let old=ps.value;let list=isParent()?santri.filter(x=>String(val(x,'NIK'))===String(profile?.nis)):santri;ps.innerHTML='<option value="">Pilih santri</option>'+list.map(x=>`<option value="${esc(val(x,'NIS'))}">${esc(val(x,'Nama Santri','Nama'))} — ${esc(val(x,'NIS'))}</option>`).join('');ps.value=list[0]?String(val(list[0],'NIS')):'';}
  const pm=$("parentMonth"); if(pm&&!pm.value)pm.value=todayISO().slice(0,7);
- if(role()==='orangtua'&&profile?.nis&&$("parentNotice"))$("parentNotice").textContent='Data kehadiran hanya menampilkan santri yang terhubung dengan akun orang tua ini.';
+ if(isParent()&&profile?.nis&&$("parentNotice"))$("parentNotice").textContent='Data kehadiran hanya menampilkan santri yang terhubung dengan NIK pada login wali murid ini.';
 }
 function loadAttendanceStudents(){const cls=$("attClass")?.value||'';attendanceStudents=santri.filter(x=>!cls||String(val(x,'Kelas'))===cls);renderAttendanceRows()}
 function renderAttendanceRows(){
@@ -351,13 +335,13 @@ async function saveAttendance(){
  if(!(isAdmin()||role()==='guru'))return alert('Akses hanya untuk Admin/Guru.');
  const tanggal=$("attDate").value,kelas=$("attClass").value,mapel=$("attMapel").value,jam=$("attJam").value||'';
  if(!tanggal||!kelas||!mapel)return alert('Tanggal, kelas, dan mata pelajaran wajib diisi.');
- if(role()==='guru'&&mapel!==val(profile,'mapel','Mapel','Mata Pelajaran'))return alert('Guru hanya dapat mengisi mata pelajaran sesuai profil.');
+
  const rows=[];document.querySelectorAll('.att-status').forEach(el=>{const nis=el.dataset.nis;const san=attendanceStudents.find(x=>String(val(x,'NIS'))===nis);const ket=document.querySelector(`.att-ket[data-nis="${CSS.escape(nis)}"]`)?.value||'';if(san)rows.push({nis,nama_santri:val(san,'Nama Santri','Nama'),kelas,tanggal,mapel,guru_id:session?.user?.id||null,guru_nama:val(profile,'nama','Nama Guru')||session?.user?.email||'-',status:el.value,keterangan:ket,jam});});
  if(!rows.length)return alert('Belum ada data kehadiran.');const {error}=await sb.from('attendance').upsert(rows,{onConflict:'nis,tanggal,mapel'});if(error)return alert('Gagal menyimpan kehadiran: '+error.message);await loadAll();alert('Kehadiran berhasil disimpan.');
 }
 function renderParentAttendance(){
  const nis=$("parentSantri")?.value||'',month=$("parentMonth")?.value||'';if(!nis){if($("parentAttendanceRows"))$("parentAttendanceRows").innerHTML='<tr><td colspan="6" class="empty">Pilih santri.</td></tr>';return;}
- let rows=attendance.filter(a=>String(a.nis)===String(nis)&&(role()!=='orangtua'||String(profile?.nis)===String(nis))&&(!month||String(a.tanggal).startsWith(month)));const count={Hadir:0,Sakit:0,Izin:0,Alpa:0};rows.forEach(a=>{if(count[a.status]!==undefined)count[a.status]++});['Hadir','Sakit','Izin','Alpa'].forEach(k=>{const el=$("att"+k);if(el)el.textContent=count[k]});
+ let rows=attendance.filter(a=>String(a.nis)===String(nis)&&(!isParent()||String(val(parentChild,'NIS'))===String(nis))&&(!month||String(a.tanggal).startsWith(month)));const count={Hadir:0,Sakit:0,Izin:0,Alpa:0};rows.forEach(a=>{if(count[a.status]!==undefined)count[a.status]++});['Hadir','Sakit','Izin','Alpa'].forEach(k=>{const el=$("att"+k);if(el)el.textContent=count[k]});
  $("parentAttendanceRows").innerHTML=rows.map(a=>`<tr><td>${esc(a.tanggal)}</td><td>${esc(a.mapel)}</td><td>${esc(a.guru_nama)}</td><td>${esc(a.kelas)}</td><td><span class="badge att-${esc(a.status)}">${esc(a.status)}</span></td><td>${esc(a.keterangan||'-')}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Belum ada riwayat kehadiran.</td></tr>';
 }
 function renderOrtu(){
@@ -730,7 +714,7 @@ function importExcel(kind){
  if(kind!=="santri")return alert("Import Excel Guru dapat ditambahkan pada tahap berikutnya.");
  let inp=document.createElement("input");inp.type="file";inp.accept=".xlsx,.xls";inp.onchange=async()=>{let f=inp.files[0];if(!f)return;let wb=XLSX.read(await f.arrayBuffer(),{type:"array"});let firstSheet=wb.Sheets[wb.SheetNames[0]];let data=XLSX.utils.sheet_to_json(firstSheet,{defval:""});if(!confirm(`Import ${data.length} santri ke database online?`))return;for(let i=0;i<data.length;i+=100){let rows=data.slice(i,i+100).filter(x=>Object.values(x).some(v=>String(v).trim())).map(x=>({record_key:crypto.randomUUID(),kind:"santri",payload:x}));let {error}=await sb.from("app_records").insert(rows);if(error)return alert(error.message)}await loadAll();alert("Import berhasil.")};inp.click()
 }
-function updateConfig(){$("configInfo").textContent=`Terhubung ke Supabase: ${window.SUPABASE_URL} • Login: ${profile?.role||"operator"} • Data: database online`}
+function updateConfig(){$("configInfo").textContent=`Terhubung ke Supabase: ${window.SUPABASE_URL} • Login: ${profile?.role||"operator"} • Data: ${parentMode?'pantauan wali murid berdasarkan NIK':'database online'}`}
 bindWilayahEvents("santri");bindWilayahEvents("guru");
 loadProvinces().catch(e=>console.warn("Wilayah belum dapat dimuat:",e));
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
