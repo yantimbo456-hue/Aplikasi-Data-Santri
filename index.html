@@ -184,6 +184,7 @@ async function init(){
  try{
    if(typeof supabase==="undefined"||typeof supabase.createClient!=="function")throw new Error("Library Supabase gagal dimuat. Periksa koneksi internet/CDN.");
    sb=supabase.createClient(window.SUPABASE_URL.trim(),window.SUPABASE_ANON_KEY.trim());
+   loadDocxLibrary().catch(err=>console.warn("Preload Word:",err));
    const {data,error}=await sb.auth.getSession();
    if(error)throw error;
    if(data?.session) await enter(data.session);
@@ -400,6 +401,39 @@ async function cachedImageBytes(url){
   if(bytes)__imageCache.set(url,bytes);
   return bytes;
 }
+/* Kecilkan foto sebelum dimasukkan ke Word agar proses Packer jauh lebih ringan. */
+async function optimizedPhotoBytes(url){
+  if(!url)return null;
+  const cacheKey="optimized:"+url;
+  if(__imageCache.has(cacheKey))return __imageCache.get(cacheKey);
+  try{
+    const raw=await imageBytes(url);
+    if(!raw)return null;
+    const blob=new Blob([raw]);
+    const img=await new Promise((resolve,reject)=>{
+      const im=new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=()=>reject(Error("Foto tidak dapat diproses."));
+      im.src=URL.createObjectURL(blob);
+    });
+    const maxW=240,maxH=180;
+    const scale=Math.min(maxW/img.naturalWidth,maxH/img.naturalHeight,1);
+    const w=Math.max(1,Math.round(img.naturalWidth*scale));
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const canvas=document.createElement("canvas");
+    canvas.width=w;canvas.height=h;
+    canvas.getContext("2d").drawImage(img,0,0,w,h);
+    const out=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.72));
+    URL.revokeObjectURL(img.src);
+    if(!out)return raw;
+    const bytes=new Uint8Array(await out.arrayBuffer());
+    __imageCache.set(cacheKey,bytes);
+    return bytes;
+  }catch(e){
+    console.warn("Optimasi foto Word gagal, memakai foto asli:",e);
+    return await cachedImageBytes(url);
+  }
+}
 function cm(v){return Math.round(v*567);}
 
 async function generateCardWord(){
@@ -411,7 +445,7 @@ async function generateCardWord(){
   const d=await ensureDocx();
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,ImageRun,AlignmentType,WidthType,BorderStyle,VerticalAlign,ShadingType}=d;
   const logo=await cachedImageBytes(PRINT_CARD_LOGO);
-  const foto=await cachedImageBytes(x.Foto||"");
+  const foto=await optimizedPhotoBytes(x.Foto||"");
   const expiry=new Date();expiry.setFullYear(expiry.getFullYear()+2);
 
   const borders={top:{style:BorderStyle.SINGLE,size:10,color:"0D6B50"},bottom:{style:BorderStyle.SINGLE,size:10,color:"0D6B50"},left:{style:BorderStyle.SINGLE,size:10,color:"0D6B50"},right:{style:BorderStyle.SINGLE,size:10,color:"0D6B50"},insideHorizontal:{style:BorderStyle.NONE},insideVertical:{style:BorderStyle.NONE}};
