@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sistem Informasi Santri — Dayah Ar-Raudhatun Nabawiyah</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#123c32">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -16,7 +20,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 .layout{display:flex;min-height:100vh}.side{width:255px;background:linear-gradient(180deg,#0b2c25,#123c32 55%,#0a211c);color:white;padding:20px 14px;position:sticky;top:0;height:100vh}.brand{padding:10px 12px 22px;border-bottom:1px solid #ffffff1c}.brand b{display:block;font-size:16px}.brand small{color:#b8d3c8}.nav{padding-top:15px}.nav button{display:block;width:100%;border:0;background:transparent;color:#d8e8e1;text-align:left;padding:12px 14px;border-radius:10px;margin:3px 0}.nav button:hover,.nav button.active{background:linear-gradient(90deg,#ffffff18,#c8a04a20);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}.main{flex:1;padding:25px;max-width:1500px;margin:auto;width:100%}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}.top h2{margin:0}.userpill{background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:13px}
 .page{display:none}.page.active{display:block}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}.stat{background:linear-gradient(145deg,#fffdf8,#f8f3e8);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}.stat .n{font-size:30px;font-weight:800;margin-top:8px}.muted{color:var(--muted);font-size:13px}
 .panel{background:linear-gradient(145deg,#fffefb,#fbf7ee);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.toolbar{display:flex;flex-wrap:wrap;gap:9px;justify-content:space-between;margin-bottom:14px}.toolbar .left,.toolbar .right{display:flex;flex-wrap:wrap;gap:8px}.btn{border:0;border-radius:10px;padding:10px 14px;background:linear-gradient(135deg,var(--primary),#1d5949);color:#fff;box-shadow:0 4px 12px #123c3220}.btn:hover{background:var(--primary2)}.btn.secondary{background:#edf2ef;color:var(--ink)}.btn.danger{background:var(--danger)}.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#17250f}.btn.sm{padding:7px 9px;font-size:12px}
-.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:900px}.table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:middle;font-size:13px}.table th{background:#f4f7f5;position:sticky;top:0}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e7f4ee;color:#126349;font-size:11px;font-weight:700}.badge.op{background:#fff2d8;color:#875f12}
+.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:900px}.table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:middle;font-size:13px}.table th{background:#f4f7f5;position:sticky;top:0}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e7f4ee;color:#126349;font-size:11px;font-weight:700}.badge.op{background:#fff2d8;color:#875f12}.att-Hadir{background:#e7f4ee;color:#126349}.att-Sakit{background:#fff2d8;color:#875f12}.att-Izin{background:#eaf1ff;color:#2456a6}.att-Alpa{background:#fff0ef;color:#a32118}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid #d8d1c2;border-radius:10px;background:#fffdf9;transition:.2s}.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px #c8a04a20}.field label::after{content:" *";color:#b08422;font-weight:800}.field textarea{min-height:80px}.full{grid-column:1/-1}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}.photoBox{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.photoPreview{width:110px;height:135px;border:1px dashed #b9c8c0;border-radius:10px;display:grid;place-items:center;overflow:hidden;background:#f5f7f5;color:var(--muted);font-size:12px;text-align:center}.photoPreview img{width:100%;height:100%;object-fit:cover}.photoHelp{font-size:11px;color:var(--muted);margin-top:5px}.photoPreview.large{width:min(360px,80vw);height:min(460px,70vh);border:0;background:#111}.photoPreview.large img{object-fit:contain}.footer{padding:18px;text-align:center;color:#7a786f;font-size:12px}.required-note{font-size:12px;color:#7a786f;margin:0 0 12px}.required-note b{color:#b08422}
 .modal{position:fixed;inset:0;background:#0007;display:none;place-items:center;padding:18px;z-index:20}.modal.show{display:grid}.modalbox{width:min(850px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:17px;padding:20px}.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.close{border:0;background:#eef2ef;border-radius:50%;width:34px;height:34px}
 .notice{padding:12px;border-radius:10px;background:#edf7f2;color:#155f49;font-size:13px;margin-bottom:12px}.error{background:#fff0ef;color:#9c2118}.empty{text-align:center;padding:30px;color:var(--muted)}
@@ -47,6 +51,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
     <button data-page="santri">♙ Data Santri</button>
     <button data-page="guru">♧ Data Guru</button>
     <button data-page="ortu">♤ Data Orang Tua</button>
+    <button data-page="kehadiran">✓ Kehadiran Santri</button>
+    <button data-page="pantau">◉ Pantauan Orang Tua</button>
     <button data-page="cetak">🖨️ Cetak</button>
     <button data-page="laporan">▤ Laporan</button>
     <button data-page="backup">↕ Backup & Restore</button>
@@ -86,6 +92,34 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
  <div class="tablewrap"><table class="table"><thead><tr><th>NIS</th><th>Santri</th><th>Ayah</th><th>HP Ayah</th><th>Ibu</th><th>HP Ibu</th><th>Desa</th><th>Kecamatan</th><th>Kabupaten</th></tr></thead><tbody id="ortuRows"></tbody></table></div></div>
 </section>
 
+
+<section id="kehadiran" class="page">
+ <div class="panel">
+  <div class="toolbar"><div class="left"><h3 style="margin:0">Kehadiran Santri</h3></div><div class="right"><button class="btn" onclick="loadAttendanceStudents()">↻ Muat Santri</button><button class="btn gold" onclick="saveAttendance()">Simpan Kehadiran</button></div></div>
+  <div class="notice">Guru mata pelajaran mengisi kehadiran sesuai tanggal, kelas, dan mata pelajaran. Guru hanya dapat mengisi mata pelajaran yang terdaftar pada profilnya.</div>
+  <div class="grid">
+   <div class="field"><label>Tanggal</label><input type="date" id="attDate" required></div>
+   <div class="field"><label>Kelas</label><select id="attClass" required onchange="loadAttendanceStudents()"><option value="">Pilih kelas</option></select></div>
+   <div class="field"><label>Mata Pelajaran</label><select id="attMapel" required><option value="">Pilih mata pelajaran</option></select></div>
+   <div class="field"><label>Jam Pelajaran</label><input id="attJam" placeholder="Contoh: 08.00–09.00"></div>
+  </div>
+  <div class="toolbar" style="margin-top:16px"><div class="left"><input id="attSearch" placeholder="Cari nama/NIS..." oninput="renderAttendanceRows()" style="padding:10px;border:1px solid #d8d1c2;border-radius:10px;width:260px"></div><div class="right"><button class="btn secondary" onclick="setAllAttendance('Hadir')">Semua Hadir</button></div></div>
+  <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>NIS</th><th>Nama Santri</th><th>Kelas</th><th>Kehadiran</th><th>Keterangan</th></tr></thead><tbody id="attendanceRows"></tbody></table></div>
+ </div>
+</section>
+<section id="pantau" class="page">
+ <div class="panel">
+  <div class="toolbar"><div class="left"><h3 style="margin:0">Pantauan Kehadiran Orang Tua / Muarid</h3></div></div>
+  <div class="notice" id="parentNotice">Pilih santri untuk melihat riwayat kehadiran.</div>
+  <div class="grid">
+   <div class="field"><label>Santri</label><select id="parentSantri" onchange="renderParentAttendance()"><option value="">Pilih santri</option></select></div>
+   <div class="field"><label>Bulan</label><input type="month" id="parentMonth" onchange="renderParentAttendance()"></div>
+  </div>
+  <div class="cards" style="margin-top:16px"><div class="stat"><div class="muted">Hadir</div><div class="n" id="attHadir">0</div></div><div class="stat"><div class="muted">Sakit</div><div class="n" id="attSakit">0</div></div><div class="stat"><div class="muted">Izin</div><div class="n" id="attIzin">0</div></div><div class="stat"><div class="muted">Alpa</div><div class="n" id="attAlpa">0</div></div></div>
+  <div class="tablewrap"><table class="table"><thead><tr><th>Tanggal</th><th>Mapel</th><th>Guru</th><th>Kelas</th><th>Status</th><th>Keterangan</th></tr></thead><tbody id="parentAttendanceRows"></tbody></table></div>
+ </div>
+</section>
+
 <section id="laporan" class="page">
  <div class="panel"><h3>Laporan Santri</h3><div class="grid">
   <div class="field"><label>Kabupaten</label><select id="filterKab"><option value="">Semua</option></select></div>
@@ -118,7 +152,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
  <div class="panel"><h3>Pengaturan Sistem</h3><p class="muted">Informasi konfigurasi koneksi aplikasi.</p><div id="configInfo" class="notice"></div><h4>Hak Akses</h4><ul><li><b>Admin:</b> tambah/edit/hapus data, backup/restore, laporan.</li><li><b>Operator:</b> tambah/edit data dan melihat laporan; penghapusan serta restore dibatasi.</li></ul></div>
 </section>
 </main></div>
-<footer class="footer">© 2026 <b>ZAMZAMI</b> • Sistem Informasi Santri — Dayah Ar-Raudhatun Nabawiyah</footer>
+<footer class="footer">© 2026 <b>ZAMZAMI</b> • Sistem Informasi Santri • PWA Android • Dayah Ar-Raudhatun Nabawiyah</footer>
 
 <div id="santriModal" class="modal"><div class="modalbox"><div class="modalhead"><h3 id="santriModalTitle">Tambah Santri</h3><button class="close" onclick="closeModal('santriModal')">×</button></div>
 <form id="santriForm" class="grid">
@@ -163,7 +197,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 window.SUPABASE_URL = "https://utugdmlrojoodoyfoecv.supabase.co";
 window.SUPABASE_ANON_KEY = "sb_publishable_cH326b7PaVSJTzKXoMFbwA_1TknFjxh";
 
-let sb=null, session=null, profile=null, santri=[], guru=[];
+let sb=null, session=null, profile=null, santri=[], guru=[], attendance=[]; let attendanceStudents=[];
 
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
@@ -233,6 +267,12 @@ function showFatal(m){$("syncStatus").textContent="Database error: "+m}
 function applyPermissions(){
  const backupBtn=document.querySelector('[data-page="backup"]');
  if(backupBtn)backupBtn.classList.toggle("hidden",!isAdmin());
+ const attBtn=document.querySelector('[data-page="kehadiran"]');
+ const parentBtn=document.querySelector('[data-page="pantau"]');
+ const isTeacher=role()==="guru"; const isParent=role()==="orangtua";
+ if(attBtn)attBtn.classList.toggle("hidden",!(isAdmin()||isTeacher));
+ if(parentBtn)parentBtn.classList.toggle("hidden",!(isAdmin()||isParent||isTeacher));
+ if(isParent){document.querySelectorAll('.nav button').forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';},0)}
 }
 async function logout(){
  try{if(sb)await sb.auth.signOut()}finally{location.reload()}
@@ -258,20 +298,22 @@ $("loginForm").addEventListener("submit",async e=>{
  }
 });
 
-document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("hidden"))return;document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent.trim();if(b.dataset.page==="laporan")renderReport();if(b.dataset.page==="cetak")renderPrintSearch()}));
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("hidden"))return;document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent.trim();if(b.dataset.page==="laporan")renderReport();if(b.dataset.page==="cetak")renderPrintSearch();if(b.dataset.page==="kehadiran")initAttendanceUI();if(b.dataset.page==="pantau")renderParentAttendance()}));
 
 async function loadAll(){
  $("syncStatus").textContent="Sinkronisasi database...";
- const [s,g]=await Promise.all([
+ const [s,g,a]=await Promise.all([
    sb.from("app_records").select("record_key,payload,updated_at").eq("kind","santri").order("updated_at",{ascending:false}),
-   sb.from("app_records").select("record_key,payload,updated_at").eq("kind","guru").order("updated_at",{ascending:false})
+   sb.from("app_records").select("record_key,payload,updated_at").eq("kind","guru").order("updated_at",{ascending:false}),
+   sb.from("attendance").select("id,nis,nama_santri,kelas,tanggal,mapel,guru_id,guru_nama,status,keterangan,jam,updated_at").order("tanggal",{ascending:false}).limit(5000)
  ]);
  if(s.error||g.error)throw (s.error||g.error);
  santri=(s.data||[]).map(x=>({...x.payload,__key:x.record_key,__updated:x.updated_at}));
  guru=(g.data||[]).map(x=>({...x.payload,__key:x.record_key,__updated:x.updated_at}));
- renderAll();$("syncStatus").textContent=`Tersinkron • ${new Date().toLocaleString("id-ID")}`;
+ attendance=a?.error?[]:(a.data||[]);
+ renderAll(); $("syncStatus").textContent=`Tersinkron • ${new Date().toLocaleString("id-ID")}`;
 }
-function renderAll(){renderDashboard();renderSantri();renderGuru();renderOrtu();fillFilters();renderReport();$("backupInfo").textContent=`${santri.length} santri • ${guru.length} guru • backup terakhir dibuat dari data online saat tombol ditekan.`}
+function renderAll(){renderDashboard();renderSantri();renderGuru();renderOrtu();fillFilters();renderReport();initAttendanceUI();renderParentAttendance();$("backupInfo").textContent=`${santri.length} santri • ${guru.length} guru • backup terakhir dibuat dari data online saat tombol ditekan.`}
 function renderDashboard(){
  const L=santri.filter(x=>val(x,"JK")==="L").length,P=santri.filter(x=>val(x,"JK")==="P").length;
  $("statSantri").textContent=santri.length;$("statL").textContent=L;$("statP").textContent=P;$("statGuru").textContent=guru.length;
@@ -287,6 +329,36 @@ function renderSantri(){
 function renderGuru(){
  let q=($("guruSearch").value||"").toLowerCase();let rows=guru.filter(x=>Object.values(x).join(" ").toLowerCase().includes(q));
  $("guruRows").innerHTML=rows.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(val(x,"NIP","ID Guru"))}</td><td>${esc(val(x,"Nama Guru","Nama"))}</td><td>${esc(val(x,"JK"))}</td><td>${esc(val(x,"Mapel","Mata Pelajaran"))}</td><td>${esc(val(x,"No HP","HP"))}</td><td><button class="btn sm" onclick="openGuru('${x.__key}')">Edit</button> ${isAdmin()?`<button class="btn sm danger" onclick="deleteRecord('guru','${x.__key}')">Hapus</button>`:""}</td></tr>`).join("")||"<tr><td colspan=7 class=empty>Belum ada data guru.</td></tr>";
+}
+
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function uniqValues(arr,key){return [...new Set(arr.map(x=>String(x[key]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id',{numeric:true}))}
+function initAttendanceUI(){
+ const d=$("attDate"); if(d&&!d.value)d.value=todayISO();
+ const cls=$("attClass"); if(cls){let old=cls.value;let values=uniqValues(santri,'Kelas');cls.innerHTML='<option value="">Pilih kelas</option>'+values.map(x=>`<option>${esc(x)}</option>`).join('');cls.value=old&&values.includes(old)?old:'';}
+ const mp=$("attMapel"); if(mp){let old=mp.value;let list=role()==='guru'?[val(profile,'mapel','Mapel','Mata Pelajaran')].filter(Boolean):uniqValues(guru,'Mapel');mp.innerHTML='<option value="">Pilih mata pelajaran</option>'+list.map(x=>`<option>${esc(x)}</option>`).join('');mp.value=role()==='guru'?list[0]||'':old;}
+ const ps=$("parentSantri"); if(ps){let old=ps.value;let list=(role()==='orangtua'&&profile?.nis)?santri.filter(x=>String(val(x,'NIS'))===String(profile.nis)):santri;ps.innerHTML='<option value="">Pilih santri</option>'+list.map(x=>`<option value="${esc(val(x,'NIS'))}">${esc(val(x,'Nama Santri','Nama'))} — ${esc(val(x,'NIS'))}</option>`).join('');ps.value=old&&list.some(x=>String(val(x,'NIS'))===old)?old:(role()==='orangtua'&&profile?.nis?String(profile.nis):'');}
+ const pm=$("parentMonth"); if(pm&&!pm.value)pm.value=todayISO().slice(0,7);
+ if(role()==='orangtua'&&profile?.nis&&$("parentNotice"))$("parentNotice").textContent='Data kehadiran hanya menampilkan santri yang terhubung dengan akun orang tua ini.';
+}
+function loadAttendanceStudents(){const cls=$("attClass")?.value||'';attendanceStudents=santri.filter(x=>!cls||String(val(x,'Kelas'))===cls);renderAttendanceRows()}
+function renderAttendanceRows(){
+ const q=($("attSearch")?.value||'').toLowerCase();const rows=attendanceStudents.filter(x=>(val(x,'Nama Santri','Nama')+' '+val(x,'NIS')).toLowerCase().includes(q));const date=$("attDate")?.value||todayISO(),mapel=$("attMapel")?.value||'';
+ $("attendanceRows").innerHTML=rows.map((x,i)=>{let key=String(val(x,'NIS'));let found=attendance.find(a=>String(a.nis)===key&&a.tanggal===date&&a.mapel===mapel&&String(a.kelas)===String(val(x,'Kelas')));return `<tr><td>${i+1}</td><td>${esc(key)}</td><td>${esc(val(x,'Nama Santri','Nama'))}</td><td>${esc(val(x,'Kelas'))}</td><td><select class="att-status" data-nis="${esc(key)}"><option ${!found||found.status==='Hadir'?'selected':''}>Hadir</option><option ${found?.status==='Sakit'?'selected':''}>Sakit</option><option ${found?.status==='Izin'?'selected':''}>Izin</option><option ${found?.status==='Alpa'?'selected':''}>Alpa</option></select></td><td><input class="att-ket" data-nis="${esc(key)}" value="${esc(found?.keterangan||'')}" placeholder="Keterangan"></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Belum ada santri pada kelas ini.</td></tr>';
+}
+function setAllAttendance(status){document.querySelectorAll('.att-status').forEach(x=>x.value=status)}
+async function saveAttendance(){
+ if(!(isAdmin()||role()==='guru'))return alert('Akses hanya untuk Admin/Guru.');
+ const tanggal=$("attDate").value,kelas=$("attClass").value,mapel=$("attMapel").value,jam=$("attJam").value||'';
+ if(!tanggal||!kelas||!mapel)return alert('Tanggal, kelas, dan mata pelajaran wajib diisi.');
+ if(role()==='guru'&&mapel!==val(profile,'mapel','Mapel','Mata Pelajaran'))return alert('Guru hanya dapat mengisi mata pelajaran sesuai profil.');
+ const rows=[];document.querySelectorAll('.att-status').forEach(el=>{const nis=el.dataset.nis;const san=attendanceStudents.find(x=>String(val(x,'NIS'))===nis);const ket=document.querySelector(`.att-ket[data-nis="${CSS.escape(nis)}"]`)?.value||'';if(san)rows.push({nis,nama_santri:val(san,'Nama Santri','Nama'),kelas,tanggal,mapel,guru_id:session?.user?.id||null,guru_nama:val(profile,'nama','Nama Guru')||session?.user?.email||'-',status:el.value,keterangan:ket,jam});});
+ if(!rows.length)return alert('Belum ada data kehadiran.');const {error}=await sb.from('attendance').upsert(rows,{onConflict:'nis,tanggal,mapel'});if(error)return alert('Gagal menyimpan kehadiran: '+error.message);await loadAll();alert('Kehadiran berhasil disimpan.');
+}
+function renderParentAttendance(){
+ const nis=$("parentSantri")?.value||'',month=$("parentMonth")?.value||'';if(!nis){if($("parentAttendanceRows"))$("parentAttendanceRows").innerHTML='<tr><td colspan="6" class="empty">Pilih santri.</td></tr>';return;}
+ let rows=attendance.filter(a=>String(a.nis)===String(nis)&&(role()!=='orangtua'||String(profile?.nis)===String(nis))&&(!month||String(a.tanggal).startsWith(month)));const count={Hadir:0,Sakit:0,Izin:0,Alpa:0};rows.forEach(a=>{if(count[a.status]!==undefined)count[a.status]++});['Hadir','Sakit','Izin','Alpa'].forEach(k=>{const el=$("att"+k);if(el)el.textContent=count[k]});
+ $("parentAttendanceRows").innerHTML=rows.map(a=>`<tr><td>${esc(a.tanggal)}</td><td>${esc(a.mapel)}</td><td>${esc(a.guru_nama)}</td><td>${esc(a.kelas)}</td><td><span class="badge att-${esc(a.status)}">${esc(a.status)}</span></td><td>${esc(a.keterangan||'-')}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Belum ada riwayat kehadiran.</td></tr>';
 }
 function renderOrtu(){
  let q=($("ortuSearch").value||"").toLowerCase();let rows=santri.filter(x=>Object.values(x).join(" ").toLowerCase().includes(q));
@@ -640,7 +712,7 @@ function backupExcelAll(){
  let wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(santri.map(({__key,__updated,...x})=>x)),"Santri");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(guru.map(({__key,__updated,...x})=>x)),"Guru");XLSX.writeFile(wb,"Backup_Data_Santri.xlsx")
 }
 function backupJSON(){
- let data={version:1,created_at:new Date().toISOString(),santri:santri.map(({__key,__updated,...x})=>x),guru:guru.map(({__key,__updated,...x})=>x)};
+ let data={version:2,created_at:new Date().toISOString(),attendance:attendance,santri:santri.map(({__key,__updated,...x})=>x),guru:guru.map(({__key,__updated,...x})=>x)};
  let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Backup_Data_Santri.json";a.click();URL.revokeObjectURL(a.href)
 }
 async function restoreJSON(e){
@@ -661,6 +733,7 @@ function importExcel(kind){
 function updateConfig(){$("configInfo").textContent=`Terhubung ke Supabase: ${window.SUPABASE_URL} • Login: ${profile?.role||"operator"} • Data: database online`}
 bindWilayahEvents("santri");bindWilayahEvents("guru");
 loadProvinces().catch(e=>console.warn("Wilayah belum dapat dimuat:",e));
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 init();
 </script>
 </body></html>
