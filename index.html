@@ -316,7 +316,7 @@ async function loginWaliByNik(nik){
  const result=Array.isArray(data)?data[0]:data;
  if(!result||!result.santri)throw new Error('NIK santri tidak ditemukan.');
  parentMode=true;parentChild=result.santri;profile={role:'orangtua',nis:nik,nama:result.santri['Nama Santri']||result.santri.Nama||'Wali Murid',email:PARENT_EMAIL};
- session=null;santri=[result.santri];guru=[];attendance=Array.isArray(result.attendance)?result.attendance:[];paymentRecords=Array.isArray(result.payments)?result.payments:[];
+ session=null;santri=[result.santri];guru=[];attendance=Array.isArray(result.attendance)?result.attendance:[];paymentRecords=Array.isArray(result.payments)?result.payments:[];paymentRecords=Array.isArray(result.payments)?result.payments:[];
  $("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("userEmail").textContent=PARENT_EMAIL;$("roleLabel").textContent="WALI MURID";$("syncStatus").textContent='Pantauan aktif • '+(profile.nama||'Santri');
  applyPermissions();renderAll();updateConfig();
 }
