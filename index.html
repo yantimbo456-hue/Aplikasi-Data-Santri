@@ -120,6 +120,26 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
   <div class="cards" style="margin-top:16px"><div class="stat"><div class="muted">Hadir</div><div class="n" id="attHadir">0</div></div><div class="stat"><div class="muted">Sakit</div><div class="n" id="attSakit">0</div></div><div class="stat"><div class="muted">Izin</div><div class="n" id="attIzin">0</div></div><div class="stat"><div class="muted">Alpa</div><div class="n" id="attAlpa">0</div></div></div>
   <div class="tablewrap"><table class="table"><thead><tr><th>Tanggal</th><th>Mapel</th><th>Guru</th><th>Kelas</th><th>Status</th><th>Keterangan</th></tr></thead><tbody id="parentAttendanceRows"></tbody></table></div>
  </div>
+
+
+  <div class="panel" style="margin-top:18px">
+   <h3>💰 Pembayaran Setoran Tahunan</h3>
+   <div id="parentPaymentSummary" class="notice">Memuat status pembayaran...</div>
+   <div id="parentPaymentStages"></div>
+   <div class="actions"><button class="btn gold" onclick="parentStartPayment()">💳 Bayar Sekarang</button></div>
+   <div id="parentPaymentForm" class="panel hidden">
+    <div class="grid">
+     <div class="field"><label>Tahap</label><select id="parentPayStage"><option value="1">Tahap 1 — Rp200.000</option><option value="2">Tahap 2 — Rp200.000</option></select></div>
+     <div class="field"><label>Nominal</label><input id="parentPayAmount" type="number" min="1" step="1000" placeholder="Nominal yang akan dibayar"></div>
+     <div class="field"><label>Metode</label><input type="hidden" id="parentPayMethod" value="Transfer"><div class="method-buttons"><button type="button" class="btn sm secondary method-btn" data-method="Cash" onclick="setPaymentMethod('parentPayMethod','Cash',this)">💵 Cash</button><button type="button" class="btn sm gold method-btn active" data-method="Transfer" onclick="setPaymentMethod('parentPayMethod','Transfer',this)">🏦 Transfer</button></div></div>
+     <div class="field full"><label>Keterangan</label><input id="parentPayNote" placeholder="Keterangan pembayaran"></div>
+    </div>
+    <div class="notice">Untuk pembayaran dari akun wali murid, sistem membuat permintaan pembayaran. Bendahara memverifikasi sebelum masuk sebagai setoran resmi.</div>
+    <div class="actions"><button class="btn secondary" onclick="document.getElementById('parentPaymentForm').classList.add('hidden')">Batal</button><button class="btn gold" onclick="parentSubmitPayment()">Kirim Pembayaran</button></div>
+   </div>
+   <div class="tablewrap" style="margin-top:14px"><table class="table"><thead><tr><th>Tanggal</th><th>Tahap</th><th>Nominal</th><th>Metode</th><th>Status</th></tr></thead><tbody id="parentPaymentRows"></tbody></table></div>
+  </div>
+</section>
 </section>
 
 
@@ -153,25 +173,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
    <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>Tanggal</th><th>Tahap</th><th>Nominal</th><th>Metode</th><th>Total Dibayar</th><th>Sisa</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="payHistoryRows"></tbody></table></div>
   </div>
  </div>
-
-  <div class="panel" style="margin-top:18px">
-   <h3>💰 Pembayaran Setoran Tahunan</h3>
-   <div id="parentPaymentSummary" class="notice">Memuat status pembayaran...</div>
-   <div id="parentPaymentStages"></div>
-   <div class="actions"><button class="btn gold" onclick="parentStartPayment()">💳 Bayar Sekarang</button></div>
-   <div id="parentPaymentForm" class="panel hidden">
-    <div class="grid">
-     <div class="field"><label>Tahap</label><select id="parentPayStage"><option value="1">Tahap 1 — Rp200.000</option><option value="2">Tahap 2 — Rp200.000</option></select></div>
-     <div class="field"><label>Nominal</label><input id="parentPayAmount" type="number" min="1" step="1000" placeholder="Nominal yang akan dibayar"></div>
-     <div class="field"><label>Metode</label><input type="hidden" id="parentPayMethod" value="Transfer"><div class="method-buttons"><button type="button" class="btn sm secondary method-btn" data-method="Cash" onclick="setPaymentMethod('parentPayMethod','Cash',this)">💵 Cash</button><button type="button" class="btn sm gold method-btn active" data-method="Transfer" onclick="setPaymentMethod('parentPayMethod','Transfer',this)">🏦 Transfer</button></div></div>
-     <div class="field full"><label>Keterangan</label><input id="parentPayNote" placeholder="Keterangan pembayaran"></div>
-    </div>
-    <div class="notice">Untuk pembayaran dari akun wali murid, sistem membuat permintaan pembayaran. Bendahara memverifikasi sebelum masuk sebagai setoran resmi.</div>
-    <div class="actions"><button class="btn secondary" onclick="document.getElementById('parentPaymentForm').classList.add('hidden')">Batal</button><button class="btn gold" onclick="parentSubmitPayment()">Kirim Pembayaran</button></div>
-   </div>
-   <div class="tablewrap" style="margin-top:14px"><table class="table"><thead><tr><th>Tanggal</th><th>Tahap</th><th>Nominal</th><th>Metode</th><th>Status</th></tr></thead><tbody id="parentPaymentRows"></tbody></table></div>
-  </div>
-</section>
 
 <section id="laporan" class="page">
  <div class="panel"><h3>Laporan Santri</h3><div class="grid">
@@ -335,7 +336,7 @@ function applyPermissions(){
    setTimeout(()=>{allNav.forEach(b=>b.classList.remove('active'));payBtn?.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pembayaran").classList.add('active');$("pageTitle").textContent='Pembayaran Santri';renderPaymentPage()},0);
  }
  if(isTeacher()){allNav.forEach(b=>{if(!['kehadiran','pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("kehadiran").classList.add('active');$("pageTitle").textContent='Kehadiran Santri';},0)}
- if(isParent()){allNav.forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';},0)}
+ if(isParent()){allNav.forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';renderParentAttendance();renderParentPayment();},0)}
 }
 async function logout(){try{if(parentMode){location.reload();return}if(sb)await sb.auth.signOut()}finally{location.reload()}}
 $("loginForm").addEventListener("submit",async e=>{
