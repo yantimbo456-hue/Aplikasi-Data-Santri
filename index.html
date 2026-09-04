@@ -59,7 +59,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
     <button data-page="laporan">▤ Laporan</button>
     <button data-page="backup">↕ Backup & Restore</button>
     <button data-page="pengaturan">⚙ Pengaturan</button>
-    <button data-page="akun" id="akunNav" class="hidden">👤 Kelola Akun & Role</button>
   </nav>
 </aside>
 <main class="main">
@@ -205,24 +204,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 <section id="pengaturan" class="page">
  <div class="panel"><h3>Pengaturan Sistem</h3><p class="muted">Informasi konfigurasi koneksi aplikasi.</p><div id="configInfo" class="notice"></div><h4>Hak Akses</h4><ul><li><b>Admin:</b> tambah/edit/hapus data, backup/restore, laporan.</li><li><b>Operator:</b> tambah/edit data dan melihat laporan; penghapusan serta restore dibatasi.</li></ul></div>
 </section>
-
-<section id="akun" class="page">
- <div class="panel">
-  <h3>👤 Kelola Akun & Role</h3>
-  <div class="notice">Menu ini hanya untuk Admin. Buat akun terlebih dahulu di <b>Supabase → Authentication → Users</b>, lalu salin <b>User UID</b> akun tersebut. Tabel <b>profiles</b> tidak membutuhkan kolom email; UID Auth menjadi nilai <b>id</b>.</div>
-  <div class="grid">
-   <div class="field full"><label>User UID dari Supabase Auth</label><input id="profileUserId" placeholder="Contoh: 424f7cab-4caf-4281-b0f6-41b3f5eee5e9"></div>
-   <div class="field"><label>Nama</label><input id="profileNama" placeholder="Contoh: Bendahara Dayah"></div>
-   <div class="field"><label>Role</label><select id="profileRole"><option value="bendahara">Bendahara</option><option value="operator">Operator</option><option value="guru">Guru</option><option value="orangtua">Orang Tua</option><option value="admin">Admin</option></select></div>
-  </div>
-  <div class="actions"><button class="btn secondary" onclick="loadProfilesAdmin()">↻ Muat Profil</button><button class="btn gold" onclick="saveProfileAdmin()">💾 Simpan Role</button></div>
- </div>
- <div class="panel">
-  <h3>Daftar Profil Aplikasi</h3>
-  <p class="muted">UID dan role diambil dari tabel <b>profiles</b>. Email akun tetap dikelola di Supabase Authentication.</p>
-  <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>User UID</th><th>Nama</th><th>Role</th><th>Dibuat</th><th>Aksi</th></tr></thead><tbody id="profilesAdminRows"><tr><td colspan="6" class="empty">Klik "Muat Profil".</td></tr></tbody></table></div>
- </div>
-</section>
 </main></div>
 <footer class="footer">© 2026 <b>ZAMZAMI</b> • Sistem Informasi Santri • PWA Android • Dayah Ar-Raudhatun Nabawiyah</footer>
 
@@ -313,6 +294,12 @@ async function enter(s){
  $("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("userEmail").textContent=s?.user?.email||"-";
  const email=String(s?.user?.email||"").toLowerCase();
  if(TEACHER_ACCOUNTS[email]){profile={role:'guru',nama:TEACHER_ACCOUNTS[email].label,email};$("roleLabel").textContent=TEACHER_ACCOUNTS[email].label;$("syncStatus").textContent='Login guru berhasil • '+TEACHER_ACCOUNTS[email].label;applyPermissions();await loadAll();updateConfig();return}
+ if(email==="bendahara@gmail.com"){
+  profile={role:'bendahara',nama:'Bendahara Dayah',email};
+  $("roleLabel").textContent="BENDAHARA";
+  $("syncStatus").textContent="Login bendahara berhasil";
+  applyPermissions();await loadAll();updateConfig();return;
+ }
  try{
   const {data:p,error}=await sb.from("profiles").select("*").eq("id",s.user.id).maybeSingle();
   profile=error?( {role:"operator"} ):(p||{role:"operator"});
@@ -336,20 +323,19 @@ async function loginWaliByNik(nik){
 
 function showFatal(m){$("syncStatus").textContent="Database error: "+m}
 function applyPermissions(){
-  const allNav=document.querySelectorAll('.nav button');
-  allNav.forEach(b=>b.classList.remove('hidden'));
-  const backupBtn=document.querySelector('[data-page="backup"]');if(backupBtn)backupBtn.classList.toggle("hidden",!isAdmin());
-  const akunBtn=document.querySelector('[data-page="akun"]');if(akunBtn)akunBtn.classList.toggle("hidden",!isAdmin());
-  const attBtn=document.querySelector('[data-page="kehadiran"]');const parentBtn=document.querySelector('[data-page="pantau"]');const payBtn=document.querySelector('[data-page="pembayaran"]');
-  if(attBtn)attBtn.classList.toggle("hidden",!(isAdmin()||isTeacher()));
-  if(parentBtn)parentBtn.classList.toggle("hidden",!(isAdmin()||isParent()||isTeacher()));
-  if(payBtn)payBtn.classList.toggle("hidden",!(isAdmin()||isTreasurer()));
-  if(isTreasurer()){
-    allNav.forEach(b=>{if(!['dashboard','pembayaran'].includes(b.dataset.page))b.classList.add('hidden')});
-    setTimeout(()=>{allNav.forEach(b=>b.classList.remove('active'));payBtn?.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pembayaran").classList.add('active');$("pageTitle").textContent='Pembayaran Santri';renderPaymentPage()},0);
-  }
-  if(isTeacher()){allNav.forEach(b=>{if(!['kehadiran','pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("kehadiran").classList.add('active');$("pageTitle").textContent='Kehadiran Santri';},0)}
-  if(isParent()){allNav.forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';},0)}
+ const allNav=document.querySelectorAll('.nav button');
+ allNav.forEach(b=>b.classList.remove('hidden'));
+ const backupBtn=document.querySelector('[data-page="backup"]');if(backupBtn)backupBtn.classList.toggle("hidden",!isAdmin());
+ const attBtn=document.querySelector('[data-page="kehadiran"]');const parentBtn=document.querySelector('[data-page="pantau"]');const payBtn=document.querySelector('[data-page="pembayaran"]');
+ if(attBtn)attBtn.classList.toggle("hidden",!(isAdmin()||isTeacher()));
+ if(parentBtn)parentBtn.classList.toggle("hidden",!(isAdmin()||isParent()||isTeacher()));
+ if(payBtn)payBtn.classList.toggle("hidden",!(isAdmin()||isTreasurer()));
+ if(isTreasurer()){
+   allNav.forEach(b=>{if(!['dashboard','pembayaran'].includes(b.dataset.page))b.classList.add('hidden')});
+   setTimeout(()=>{allNav.forEach(b=>b.classList.remove('active'));payBtn?.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pembayaran").classList.add('active');$("pageTitle").textContent='Pembayaran Santri';renderPaymentPage()},0);
+ }
+ if(isTeacher()){allNav.forEach(b=>{if(!['kehadiran','pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("kehadiran").classList.add('active');$("pageTitle").textContent='Kehadiran Santri';},0)}
+ if(isParent()){allNav.forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';},0)}
 }
 async function logout(){try{if(parentMode){location.reload();return}if(sb)await sb.auth.signOut()}finally{location.reload()}}
 $("loginForm").addEventListener("submit",async e=>{
@@ -362,7 +348,7 @@ $("loginForm").addEventListener("submit",async e=>{
  }catch(err){console.error("Login error:",err);showError("Login gagal: "+(err?.message||err))}finally{if(button){button.disabled=false;button.textContent="Masuk"}}
 });
 
-document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("hidden"))return;document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent.trim();if(b.dataset.page==="laporan")renderReport();if(b.dataset.page==="cetak")renderPrintSearch();if(b.dataset.page==="kehadiran")initAttendanceUI();if(b.dataset.page==="pantau"){renderParentAttendance();renderParentPayment()}if(b.dataset.page==="pembayaran")renderPaymentPage();if(b.dataset.page==="akun")loadProfilesAdmin()}));
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("hidden"))return;document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent.trim();if(b.dataset.page==="laporan")renderReport();if(b.dataset.page==="cetak")renderPrintSearch();if(b.dataset.page==="kehadiran")initAttendanceUI();if(b.dataset.page==="pantau"){renderParentAttendance();renderParentPayment()}if(b.dataset.page==="pembayaran")renderPaymentPage()}));
 
 async function loadAll(){
  $("syncStatus").textContent="Sinkronisasi database...";
@@ -539,36 +525,6 @@ async function parentSubmitPayment(){
  alert('Permintaan pembayaran berhasil dikirim. Bendahara perlu memverifikasi pembayaran ini.');$("parentPaymentForm").classList.add('hidden');
 }
 
-/* ==================== KELOLA PROFIL / ROLE ADMIN ==================== */
-function validUuid(v){return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v||'').trim())}
-async function saveProfileAdmin(){
-  if(!isAdmin())return alert("Hanya Admin yang boleh mengelola role akun.");
-  const id=String($("profileUserId")?.value||"").trim(),nama=String($("profileNama")?.value||"").trim(),roleValue=String($("profileRole")?.value||"").trim();
-  if(!validUuid(id))return alert("User UID tidak valid. Salin UUID dari Supabase Authentication → Users.");
-  if(!nama)return alert("Nama wajib diisi.");
-  if(!["admin","operator","guru","orangtua","bendahara"].includes(roleValue))return alert("Role tidak valid.");
-  const {error}=await sb.from("profiles").upsert({id,nama,full_name:nama,role:roleValue,updated_at:new Date().toISOString()},{onConflict:"id"});
-  if(error)return alert("Gagal menyimpan profil: "+error.message);
-  alert("Role berhasil disimpan. Jika akun sedang login di tab lain, logout lalu login kembali agar role terbaru terbaca.");
-  $("profileUserId").value="";$("profileNama").value="";$("profileRole").value="bendahara";
-  await loadProfilesAdmin();
-}
-async function loadProfilesAdmin(){
-  if(!isAdmin())return;
-  const tbody=$("profilesAdminRows");if(!tbody)return;
-  tbody.innerHTML='<tr><td colspan="6" class="empty">Memuat profil...</td></tr>';
-  const {data,error}=await sb.from("profiles").select("id,nama,full_name,role,created_at,updated_at").order("created_at",{ascending:true});
-  if(error){tbody.innerHTML=`<tr><td colspan="6" class="empty">Gagal memuat profil: ${esc(error.message)}</td></tr>`;return}
-  tbody.innerHTML=(data||[]).map((p,i)=>{
-    const nama=val(p,"nama","full_name")||"-",dibuat=p.created_at?new Date(p.created_at).toLocaleString("id-ID"):"-";
-    return `<tr><td>${i+1}</td><td><code>${esc(p.id)}</code></td><td>${esc(nama)}</td><td><span class="badge">${esc(String(p.role||"operator").toUpperCase())}</span></td><td>${esc(dibuat)}</td><td><button class="btn sm" onclick="editProfileAdmin('${esc(p.id)}','${esc(nama)}','${esc(p.role||"operator")}')">Pilih</button></td></tr>`;
-  }).join("")||'<tr><td colspan="6" class="empty">Belum ada profil.</td></tr>';
-}
-function editProfileAdmin(id,nama,roleValue){
-  $("profileUserId").value=id||"";$("profileNama").value=nama||"";
-  $("profileRole").value=["admin","operator","guru","orangtua","bendahara"].includes(roleValue)?roleValue:"operator";
-  window.scrollTo({top:0,behavior:"smooth"});
-}
 // ==================== WILAYAH INDONESIA ====================
 const WILAYAH_API="https://www.emsifa.com/api-wilayah-indonesia/api";
 const wilayahCache={provinces:null,regencies:{},districts:{},villages:{}};
