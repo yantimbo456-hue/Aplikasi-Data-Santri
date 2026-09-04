@@ -520,7 +520,7 @@ async function parentSubmitPayment(){
  const y=new Date().getFullYear(),alreadyStage=paidStage(nik,y,stage),alreadyTotal=paidTotal(nik,y);
  if(alreadyTotal+amount>ANNUAL_FEE)return alert('Nominal melebihi sisa kewajiban.');if(alreadyStage+amount>STAGE_FEE)return alert('Nominal melebihi sisa tahap.');
  const s=studentByNik(nik)||parentChild;
- const payload={nik,nama_santri:val(s,'Nama Santri','Nama'),nis:val(s,'NIS'),kelas:val(s,'Kelas'),year:y,stage,amount,method,note:$("parentPayNote").value||'',requested_at:new Date().toISOString(),requested_by:PARENT_EMAIL,status:'MENUNGGU VERIFIKASI'};
+ const payload={nik,nama_santri:val(s,'Nama Santri','Nama'),nis:val(s,'NIS'),kelas:val(s,'Kelas'),year:y,stage,amount,method,note:$("parentPayNote").value||'',requested_at:new Date().toISOString(),requested_by:null,status:'MENUNGGU VERIFIKASI'};
  const {error}=await sb.from('payment_requests').insert(payload).select('*').single();
  if(error)return alert('Gagal mengirim pembayaran: '+error.message);
  alert('Permintaan pembayaran berhasil dikirim. Bendahara perlu memverifikasi pembayaran ini.');$("parentPaymentForm").classList.add('hidden');
