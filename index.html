@@ -546,7 +546,7 @@ async function parentSubmitPayment(){
   note,
   requested_at:now.toISOString()
  };
- const {error}=await sb.from('payment_requests').insert(payload).select('*').single();
+ const {data,error}=await sb.rpc('submit_payment_request_json',{p_payload:payload});
  if(error)return alert('Gagal mengirim pembayaran: '+error.message);
  alert('Permintaan pembayaran berhasil dikirim. Bendahara perlu memverifikasi pembayaran ini.');$("parentPaymentForm").classList.add('hidden');
 }
