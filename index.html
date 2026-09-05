@@ -147,6 +147,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
  <div class="panel">
   <div class="toolbar"><div class="left"><h3 style="margin:0">💰 Pembayaran Setoran Tahunan Santri</h3></div><div class="right"><button class="btn secondary" onclick="renderPaymentPage()">↻ Muat</button></div></div>
   <div class="notice">Total kewajiban tahunan <b>Rp400.000</b>, dibayar dalam <b>2 tahap</b>. Setiap tahap boleh dicicil dan semua cicilan tetap tercatat.</div>
+  <div id="paymentRequestBox" class="panel" style="margin-top:14px">
+   <div class="toolbar"><div class="left"><h4 style="margin:0">🔔 Permintaan Pembayaran Wali Murid</h4></div><div class="right"><button class="btn sm secondary" onclick="loadPaymentRequests()">↻ Muat Permintaan</button></div></div>
+   <div id="paymentRequestNotice" class="notice">Memuat permintaan pembayaran...</div>
+   <div class="tablewrap"><table class="table"><thead><tr><th>Tanggal</th><th>Nama Santri</th><th>NIS</th><th>Tahap</th><th>Nominal</th><th>Metode</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="paymentRequestRows"></tbody></table></div>
+  </div>
   <div class="grid">
    <div class="field"><label>Tahun Pembayaran</label><input id="payYear" type="number" min="2020" max="2100" required></div>
    <div class="field"><label>Cari Santri Berdasarkan NIK</label><input id="payNik" maxlength="16" inputmode="numeric" placeholder="Masukkan NIK 16 digit" oninput="findPaymentStudent()"></div>
@@ -251,7 +256,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 window.SUPABASE_URL = "https://utugdmlrojoodoyfoecv.supabase.co";
 window.SUPABASE_ANON_KEY = "sb_publishable_cH326b7PaVSJTzKXoMFbwA_1TknFjxh";
 
-let sb=null, session=null, profile=null, santri=[], guru=[], attendance=[], paymentRecords=[]; let attendanceStudents=[];
+let sb=null, session=null, profile=null, santri=[], guru=[], attendance=[], paymentRecords=[], paymentRequests=[]; let attendanceStudents=[];
 let parentMode=false, parentChild=null;
 
 const TEACHER_ACCOUNTS={
@@ -333,7 +338,7 @@ function applyPermissions(){
  if(payBtn)payBtn.classList.toggle("hidden",!(isAdmin()||isTreasurer()));
  if(isTreasurer()){
    allNav.forEach(b=>{if(!['dashboard','pembayaran'].includes(b.dataset.page))b.classList.add('hidden')});
-   setTimeout(()=>{allNav.forEach(b=>b.classList.remove('active'));payBtn?.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pembayaran").classList.add('active');$("pageTitle").textContent='Pembayaran Santri';renderPaymentPage()},0);
+   setTimeout(()=>{allNav.forEach(b=>b.classList.remove('active'));payBtn?.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pembayaran").classList.add('active');$("pageTitle").textContent='Pembayaran Santri';renderPaymentPage();renderPaymentRequests()},0);
  }
  if(isTeacher()){allNav.forEach(b=>{if(!['kehadiran','pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("kehadiran").classList.add('active');$("pageTitle").textContent='Kehadiran Santri';},0)}
  if(isParent()){allNav.forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';renderParentAttendance();renderParentPayment();},0)}
@@ -353,20 +358,22 @@ document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",(
 
 async function loadAll(){
  $("syncStatus").textContent="Sinkronisasi database...";
- const [s,g,a,pay]=await Promise.all([
+ const [s,g,a,pay,req]=await Promise.all([
    sb.from("app_records").select("record_key,payload,updated_at").eq("kind","santri").order("updated_at",{ascending:false}),
    sb.from("app_records").select("record_key,payload,updated_at").eq("kind","guru").order("updated_at",{ascending:false}),
    sb.from("attendance").select("id,nis,nama_santri,kelas,tanggal,mapel,guru_id,guru_nama,status,keterangan,jam,updated_at").order("tanggal",{ascending:false}).limit(5000),
-   sb.from("student_payments").select("*").order("paid_at",{ascending:false}).limit(10000)
+   sb.from("student_payments").select("*").order("paid_at",{ascending:false}).limit(10000),
+   sb.from("payment_requests").select("*").order("created_at",{ascending:false}).limit(5000)
  ]);
  if(s.error||g.error)throw (s.error||g.error);
  santri=(s.data||[]).map(x=>({...x.payload,__key:x.record_key,__updated:x.updated_at}));
  guru=(g.data||[]).map(x=>({...x.payload,__key:x.record_key,__updated:x.updated_at}));
  attendance=a?.error?[]:(a.data||[]);
  paymentRecords=pay?.error?[]:(pay.data||[]);
+ paymentRequests=req?.error?[]:(req.data||[]);
  renderAll(); $("syncStatus").textContent=`Tersinkron • ${new Date().toLocaleString("id-ID")}`;
 }
-function renderAll(){renderDashboard();renderSantri();renderGuru();renderOrtu();fillFilters();renderReport();initAttendanceUI();renderParentAttendance();renderPaymentPage();renderParentPayment();$("backupInfo").textContent=`${santri.length} santri • ${guru.length} guru • backup terakhir dibuat dari data online saat tombol ditekan.`}
+function renderAll(){renderDashboard();renderSantri();renderGuru();renderOrtu();fillFilters();renderReport();initAttendanceUI();renderParentAttendance();renderPaymentPage();renderPaymentRequests();renderParentPayment();$("backupInfo").textContent=`${santri.length} santri • ${guru.length} guru • backup terakhir dibuat dari data online saat tombol ditekan.`}
 function renderDashboard(){
  const L=santri.filter(x=>val(x,"JK")==="L").length,P=santri.filter(x=>val(x,"JK")==="P").length;
  $("statSantri").textContent=santri.length;$("statL").textContent=L;$("statP").textContent=P;$("statGuru").textContent=guru.length;
@@ -463,6 +470,37 @@ function paidTotal(nik,year){return paymentsFor(nik,year).reduce((s,p)=>s+Number
 function paidStage(nik,year,stage){return paymentsFor(nik,year).filter(p=>Number(p.stage)===Number(stage)).reduce((s,p)=>s+Number(p.amount||0),0)}
 function paymentStatus(nik,year){return paidTotal(nik,year)>=ANNUAL_FEE?'LUNAS':'BELUM LUNAS'}
 function paymentBadge(status){return status==='LUNAS'?'<span class="badge">LUNAS</span>':'<span class="badge op">BELUM LUNAS</span>'}
+function renderPaymentRequests(){
+ const box=$("paymentRequestBox"),note=$("paymentRequestNotice"),rows=$("paymentRequestRows");
+ if(!box||!note||!rows)return;
+ if(!isTreasurer()&&!isAdmin()){box.classList.add("hidden");return;}
+ box.classList.remove("hidden");
+ const pending=paymentRequests.filter(r=>String(r.status||'').toLowerCase()==='pending');
+ note.innerHTML=pending.length?`🔔 <b>${pending.length} permintaan</b> pembayaran wali murid menunggu verifikasi.`:'Tidak ada permintaan pembayaran yang menunggu verifikasi.';
+ rows.innerHTML=paymentRequests.map(r=>{const st=String(r.status||'').toLowerCase();const status=st==='pending'?'MENUNGGU VERIFIKASI':st==='approved'?'DISETUJUI':st==='rejected'?'DITOLAK':String(r.status||'-');const dt=r.requested_at||r.created_at;return `<tr><td>${esc(dt?new Date(dt).toLocaleString('id-ID'):'-')}</td><td>${esc(r.nama_santri||r.student_name||'-')}</td><td>${esc(r.nis||r.student_nis||'-')}</td><td>Tahap ${esc(r.stage||r.payment_type||'-')}</td><td>${rupiah(r.amount)}</td><td>${esc(r.method||r.payment_method||'-')}</td><td>${esc(r.note||r.notes||'-')}</td><td>${status==='DISETUJUI'?'<span class="badge">DISETUJUI</span>':status==='DITOLAK'?'<span class="badge op">DITOLAK</span>':'<span class="badge op">MENUNGGU</span>'}</td><td>${st==='pending'?`<button class="btn sm gold" onclick="verifyPaymentRequest('${esc(r.id)}')">✓ Verifikasi</button> <button class="btn sm secondary" onclick="rejectPaymentRequest('${esc(r.id)}')">Tolak</button>`:'-'}</td></tr>`}).join('')||'<tr><td colspan="9" class="empty">Belum ada permintaan pembayaran.</td></tr>';
+}
+async function loadPaymentRequests(){
+ if(!(isTreasurer()||isAdmin()))return;
+ const {data,error}=await sb.from('payment_requests').select('*').order('created_at',{ascending:false}).limit(5000);
+ if(error)return alert('Gagal memuat permintaan pembayaran: '+error.message);
+ paymentRequests=data||[];renderPaymentRequests();
+}
+async function verifyPaymentRequest(id){
+ if(!(isTreasurer()||isAdmin()))return alert('Akses hanya untuk Bendahara/Admin.');
+ if(!confirm('Verifikasi pembayaran ini dan masukkan sebagai setoran resmi?'))return;
+ const {data,error}=await sb.rpc('verify_payment_request_json',{p_request_id:id,p_action:'approved'});
+ if(error)return alert('Gagal memverifikasi pembayaran: '+error.message);
+ await loadAll();
+ alert('Pembayaran berhasil diverifikasi dan masuk sebagai setoran resmi.');
+}
+async function rejectPaymentRequest(id){
+ if(!(isTreasurer()||isAdmin()))return alert('Akses hanya untuk Bendahara/Admin.');
+ if(!confirm('Tolak permintaan pembayaran ini?'))return;
+ const {error}=await sb.rpc('verify_payment_request_json',{p_request_id:id,p_action:'rejected'});
+ if(error)return alert('Gagal menolak pembayaran: '+error.message);
+ await loadAll();
+ alert('Permintaan pembayaran ditolak.');
+}
 function renderPaymentPage(){const y=$("payYear");if(y&&!y.value)y.value=new Date().getFullYear();if($("payNik")?.value)findPaymentStudent()}
 function findPaymentStudent(){
  const nik=String($("payNik")?.value||'').replace(/\D/g,'');
