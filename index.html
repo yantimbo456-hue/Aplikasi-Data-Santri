@@ -19,7 +19,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 .loginbox{width:min(430px,100%);background:white;border-radius:22px;padding:34px;box-shadow:0 25px 70px #0005}.logo{width:66px;height:66px;border-radius:18px;background:#e9f4ef;display:grid;place-items:center;font-size:34px;margin:auto;color:var(--primary)}
 .login h1{text-align:center;font-size:22px;margin:18px 0 4px}.login p{text-align:center;color:var(--muted);margin:0 0 25px}
 .layout{display:flex;min-height:100vh}.side{width:255px;background:linear-gradient(180deg,#0b2c25,#123c32 55%,#0a211c);color:white;padding:20px 14px;position:sticky;top:0;height:100vh}.brand{padding:10px 12px 22px;border-bottom:1px solid #ffffff1c}.brand b{display:block;font-size:16px}.brand small{color:#b8d3c8}.nav{padding-top:15px}.nav button{display:block;width:100%;border:0;background:transparent;color:#d8e8e1;text-align:left;padding:12px 14px;border-radius:10px;margin:3px 0}.nav button:hover,.nav button.active{background:linear-gradient(90deg,#ffffff18,#c8a04a20);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}.main{flex:1;padding:25px;max-width:1500px;margin:auto;width:100%}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}.top h2{margin:0}.userpill{background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:13px}
-.page{display:none}.page.active{display:block}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}.stat{background:linear-gradient(145deg,#fffdf8,#f8f3e8);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}.stat .n{font-size:30px;font-weight:800;margin-top:8px}.muted{color:var(--muted);font-size:13px}
+.page{display:none}.page.active{display:block}.page#cetak.active{display:block!important}.page#cetak .panel{display:block!important}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}.stat{background:linear-gradient(145deg,#fffdf8,#f8f3e8);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}.stat .n{font-size:30px;font-weight:800;margin-top:8px}.muted{color:var(--muted);font-size:13px}
 .panel{background:linear-gradient(145deg,#fffefb,#fbf7ee);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.toolbar{display:flex;flex-wrap:wrap;gap:9px;justify-content:space-between;margin-bottom:14px}.toolbar .left,.toolbar .right{display:flex;flex-wrap:wrap;gap:8px}.btn{border:0;border-radius:10px;padding:10px 14px;background:linear-gradient(135deg,var(--primary),#1d5949);color:#fff;box-shadow:0 4px 12px #123c3220}.btn:hover{background:var(--primary2)}.btn.secondary{background:#edf2ef;color:var(--ink)}.btn.danger{background:var(--danger)}.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#17250f}.btn.sm{padding:7px 9px;font-size:12px}.method-buttons{display:flex;gap:8px;flex-wrap:wrap}.method-btn{min-width:105px}.method-btn.active{box-shadow:0 0 0 2px var(--gold),0 4px 12px #123c3220}
 .tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:900px}.table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:middle;font-size:13px}.table th{background:#f4f7f5;position:sticky;top:0}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e7f4ee;color:#126349;font-size:11px;font-weight:700}.badge.op{background:#fff2d8;color:#875f12}.att-Hadir{background:#e7f4ee;color:#126349}.att-Sakit{background:#fff2d8;color:#875f12}.att-Izin{background:#eaf1ff;color:#2456a6}.att-Alpa{background:#fff0ef;color:#a32118}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid #d8d1c2;border-radius:10px;background:#fffdf9;transition:.2s}.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px #c8a04a20}.field label::after{content:" *";color:#b08422;font-weight:800}.field textarea{min-height:80px}.full{grid-column:1/-1}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}.photoBox{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.photoPreview{width:110px;height:135px;border:1px dashed #b9c8c0;border-radius:10px;display:grid;place-items:center;overflow:hidden;background:#f5f7f5;color:var(--muted);font-size:12px;text-align:center}.photoPreview img{width:100%;height:100%;object-fit:cover}.photoHelp{font-size:11px;color:var(--muted);margin-top:5px}.photoPreview.large{width:min(360px,80vw);height:min(460px,70vh);border:0;background:#111}.photoPreview.large img{object-fit:contain}.footer{padding:18px;text-align:center;color:#7a786f;font-size:12px}.required-note{font-size:12px;color:#7a786f;margin:0 0 12px}.required-note b{color:#b08422}
@@ -192,18 +192,23 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
 </section>
 
 <section id="cetak" class="page">
- <div class="panel">
-  <h3>Menu Cetak</h3>
+ <div class="panel" style="display:block!important;visibility:visible!important">
+  <h3 style="margin-top:0">🖨️ Menu Cetak Santri</h3>
   <div class="grid">
-   <div class="field full"><label>Cari Santri berdasarkan NIK / Nama</label><input id="printSearch" placeholder="Ketik NIK atau nama santri..." oninput="renderPrintSearch()"></div>
+   <div class="field full"><label>Cari Santri berdasarkan NIK / Nama</label><input id="printSearch" autocomplete="off" placeholder="Ketik NIK atau nama santri..."></div>
   </div>
   <p id="printSearchInfo" class="muted">Masukkan NIK atau nama untuk mencari santri.</p>
-  <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>NIK</th><th>NIS</th><th>Nama</th><th>Kelas</th><th>Aksi</th></tr></thead><tbody id="printRows"></tbody></table></div>
+  <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>NIK</th><th>NIS</th><th>Nama</th><th>Kelas</th><th>Aksi</th></tr></thead><tbody id="printRows"><tr><td colspan="6" class="empty">Ketik NIK atau nama santri.</td></tr></tbody></table></div>
  </div>
- <div class="panel"><h3>🖨️ Cetak Dokumen Santri</h3><p class="muted">Cari berdasarkan <b>NIK</b> atau <b>Nama</b>, pilih santri, lalu sistem menampilkan <b>popup preview</b>. Setelah preview sesuai, klik <b>Unduh Word untuk Diedit</b>.</p><div class="actions">
-  <button id="btnPrintCard" class="btn" onclick="printSelectedCard()" disabled>🪪 Cetak Kartu Santri</button>
-  <button id="btnPrintActive" class="btn gold" onclick="printSelectedActiveLetter()" disabled>📄 Cetak Surat Aktif</button>
- </div><div id="selectedPrintInfo" class="notice">Belum ada santri dipilih.</div></div>
+ <div class="panel" style="display:block!important;visibility:visible!important">
+  <h3 style="margin-top:0">📄 Cetak Dokumen</h3>
+  <div id="selectedPrintInfo" class="notice">Belum ada santri dipilih.</div>
+  <p class="muted">Pilih santri terlebih dahulu. Setelah itu pilih dokumen. Sistem akan menampilkan <b>preview popup</b> sebelum Word diunduh.</p>
+  <div class="actions" style="justify-content:flex-start;flex-wrap:wrap">
+   <button id="btnPrintCard" class="btn" onclick="printSelectedCard()" disabled>🪪 Cetak Kartu Santri</button>
+   <button id="btnPrintActive" class="btn gold" onclick="printSelectedActiveLetter()" disabled>📄 Cetak Surat Aktif</button>
+  </div>
+ </div>
 </section>
 <section id="backup" class="page">
  <div class="panel"><h3>Backup & Restore Database</h3><div class="notice">Backup di sini membuat salinan seluruh data santri dan guru dalam satu file JSON. Simpan file tersebut di tempat aman. Restore akan mengganti data yang ada dengan isi backup.</div>
@@ -363,7 +368,7 @@ $("loginForm").addEventListener("submit",async e=>{
  }catch(err){console.error("Login error:",err);showError("Login gagal: "+(err?.message||err))}finally{if(button){button.disabled=false;button.textContent="Masuk"}}
 });
 
-document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("hidden"))return;document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent.trim();if(b.dataset.page==="laporan")renderReport();if(b.dataset.page==="cetak")renderPrintSearch();if(b.dataset.page==="kehadiran")initAttendanceUI();if(b.dataset.page==="pantau"){renderParentAttendance();renderParentPayment()}if(b.dataset.page==="pembayaran")renderPaymentPage()}));
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("hidden"))return;document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent.trim();if(b.dataset.page==="laporan")renderReport();if(b.dataset.page==="cetak")initPrintMenu();if(b.dataset.page==="kehadiran")initAttendanceUI();if(b.dataset.page==="pantau"){renderParentAttendance();renderParentPayment()}if(b.dataset.page==="pembayaran")renderPaymentPage()}));
 
 async function loadAll(){
  $("syncStatus").textContent="Sinkronisasi database...";
@@ -613,9 +618,6 @@ function bindWilayahEvents(form){$(form+"Provinsi").addEventListener("change",()
 
 // ==================== MENU CETAK ====================
 let selectedPrintKey="";
-function renderPrintSearch(){const q=($("printSearch").value||"").trim().toLowerCase();const rows=q?santri.filter(x=>String(val(x,"NIK")).toLowerCase().includes(q)||String(val(x,"Nama Santri","Nama")).toLowerCase().includes(q)):[];$('printRows').innerHTML=rows.slice(0,50).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(val(x,"NIK"))}</td><td>${esc(val(x,"NIS"))}</td><td>${esc(val(x,"Nama Santri","Nama"))}</td><td>${esc(val(x,"Kelas"))}</td><td><button class="btn sm" onclick="selectPrintSantri('${x.__key}')">Pilih</button></td></tr>`).join("")||`<tr><td colspan="6" class="empty">${q?"Santri tidak ditemukan.":"Ketik NIK atau nama santri."}</td></tr>`;$('printSearchInfo').textContent=q?`Ditemukan ${rows.length} santri.`:"Masukkan NIK atau nama untuk mencari santri."}
-function selectPrintSantri(key){selectedPrintKey=key;const x=santri.find(a=>a.__key===key);$('selectedPrintInfo').textContent=x?`Dipilih: ${val(x,"Nama Santri","Nama")} • NIK ${val(x,"NIK")} • NIS ${val(x,"NIS")}`:"Belum ada santri dipilih."}
-function selectedSantriForPrint(){const x=santri.find(a=>a.__key===selectedPrintKey);if(!x){alert("Pilih santri terlebih dahulu.");return null}return x}
 function printWindow(title,body,cssExtra=""){
   const html=`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>@page{size:A4;margin:10mm}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,sans-serif}body{font-size:11pt}.no-print{display:none!important}${cssExtra}</style></head><body>${body}</body></html>`;
   const frame=document.createElement("iframe");
@@ -724,6 +726,12 @@ function selectPrintSantri(key){
 function selectedSantriForPrint(){
   const x=santri.find(a=>a.__key===selectedPrintKey);
   if(!x){alert("Pilih santri terlebih dahulu.");return null}return x;
+}
+function initPrintMenu(){
+  const search=$("printSearch"), rows=$("printRows"), info=$("printSearchInfo"), selected=$("selectedPrintInfo");
+  if(!search||!rows||!info||!selected)return;
+  if(!search.dataset.printBound){search.dataset.printBound="1";search.addEventListener("input",renderPrintSearch);}
+  renderPrintSearch();
 }
 function closeDocPreview(){closeModal("docPreviewModal");$("docPreviewContent").innerHTML="";}
 function popupDocReview(title,html,onDownload){
