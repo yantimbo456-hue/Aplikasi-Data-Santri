@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dayah.raudhatunnabawiyah.santri",
+      "sha256_cert_fingerprints": [
+        "C2:F7:3C:C3:CC:DE:68:B0:0C:F2:53:06:6B:BA:45:CA:36:55:E5:39:D2:89:82:EB:82:48:AE:75:32:63:BF:97"
+      ]
+    }
+  }
+]
