@@ -340,7 +340,22 @@ async function init(){
   const {data,error}=await sb.auth.getSession();
   if(error)throw error;
   if(data?.session) await enter(data.session); else $("loginScreen").classList.remove("hidden");
-  sb.auth.onAuthStateChange((event,newSession)=>{if(event==="SIGNED_OUT"){session=null;location.reload();return}if(newSession&&(!session||session.access_token!==newSession.access_token))setTimeout(()=>enter(newSession),0)});
+ sb.auth.onAuthStateChange((event,newSession)=>{
+  if(event==="SIGNED_OUT"){
+    session=null;
+    profile=null;
+    parentMode=false;
+    parentChild=null;
+    alumniMode=false;
+    alumniRecord=null;
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    $("app").classList.add("hidden");
+    $("loginScreen").classList.remove("hidden");
+    return
+  }
+  if(newSession&&(!session||session.access_token!==newSession.access_token))
+    setTimeout(()=>enter(newSession),0)
+});
  }catch(err){console.error("Supabase init error:",err);showError("Gagal terhubung ke Supabase: "+(err?.message||err))}
 }
 
@@ -411,7 +426,26 @@ function applyPermissions(){
  if(isTeacher()){allNav.forEach(b=>{if(!['kehadiran','pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("kehadiran").classList.add('active');$("pageTitle").textContent='Kehadiran Santri';},0)}
  if(isParent()){allNav.forEach(b=>{if(!['pantau'].includes(b.dataset.page))b.classList.add('hidden')});setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$("pantau").classList.add('active');$("pageTitle").textContent='Pantauan Orang Tua';renderParentAttendance();renderParentPayment();},0)}
 }
-async function logout(){try{if(parentMode||alumniMode){location.reload();return}if(sb)await sb.auth.signOut()}finally{location.reload()}}
+async function logout(){
+  try{
+    if(parentMode||alumniMode){
+      session=null;
+      profile=null;
+      parentMode=false;
+      parentChild=null;
+      alumniMode=false;
+      alumniRecord=null;
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      $("app").classList.add("hidden");
+      $("loginScreen").classList.remove("hidden");
+      return
+    }
+    if(sb)await sb.auth.signOut()
+  }catch(err){
+    console.error("Logout error:",err);
+    showError("Gagal keluar: "+(err?.message||err))
+  }
+}
 $("loginForm").addEventListener("submit",async e=>{
  e.preventDefault();hideError();const email=$("loginEmail").value.trim().toLowerCase();const password=$("loginPassword").value;
  if(!configReady())return showError("Konfigurasi Supabase belum benar.");if(!email||!password)return showError("Email dan password wajib diisi.");
